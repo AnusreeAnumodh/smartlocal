@@ -1,0 +1,11 @@
+<app-page-shell title="Authentication" subtitle="Sign in to access protected features.">
+  <form class="auth-form" (ngSubmit)="submit()">
+    <label for="email">Email</label>
+    <input id="email" type="email" [(ngModel)]="form.email" name="email" required />
+
+    <label for="password">Password</label>
+    <input id="password" type="password" [(ngModel)]="form.password" name="password" required />
+
+    <button type="submit">Login</button>
+  </form>
+</app-page-shell>

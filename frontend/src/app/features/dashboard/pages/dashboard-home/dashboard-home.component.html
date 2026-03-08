@@ -1,0 +1,29 @@
+<app-page-shell title="Dashboard" subtitle="Service lookup and emergency actions.">
+  <p class="muted">Backend status: {{ backendStatus }}</p>
+
+  <section class="panel">
+    <h3>Find Services</h3>
+    <div class="row">
+      <select [(ngModel)]="category">
+        <option value="plumber">Plumber</option>
+        <option value="electrician">Electrician</option>
+        <option value="medical_store">Medical Store</option>
+        <option value="ambulance">Ambulance</option>
+      </select>
+      <input type="text" [(ngModel)]="city" placeholder="City" />
+      <button (click)="searchServices()">Search</button>
+    </div>
+
+    <ul>
+      <li *ngFor="let item of services">
+        <strong>{{ item.name }}</strong> - {{ item.category | capitalize }} - {{ item.phone }}
+      </li>
+    </ul>
+  </section>
+
+  <section class="panel emergency">
+    <h3>Emergency</h3>
+    <button class="sos" (click)="triggerSos()">One-Tap SOS</button>
+    <p *ngIf="sosMessage">{{ sosMessage }}</p>
+  </section>
+</app-page-shell>

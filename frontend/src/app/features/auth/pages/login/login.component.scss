@@ -1,0 +1,19 @@
+.auth-form {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 360px;
+}
+
+input,
+button {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid #bcccdc;
+}
+
+button {
+  background: #0b69ff;
+  border-color: #0b69ff;
+  color: #ffffff;
+  cursor: pointer;
+}

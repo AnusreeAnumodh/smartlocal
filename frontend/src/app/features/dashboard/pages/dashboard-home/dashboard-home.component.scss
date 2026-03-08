@@ -1,0 +1,39 @@
+.panel {
+  border-top: 1px solid #d9e2ec;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: #4a5a73;
+}
+
+input,
+select,
+button {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid #bcccdc;
+}
+
+button {
+  background: #0b69ff;
+  border-color: #0b69ff;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.sos {
+  background: #d64545;
+  border-color: #d64545;
+}
+
+ul {
+  padding-left: 1.25rem;
+}
