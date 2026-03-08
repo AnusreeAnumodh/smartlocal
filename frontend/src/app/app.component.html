@@ -1,0 +1,14 @@
+<div class="layout">
+  <header class="topbar">
+    <h1>Smart Local Services</h1>
+    <nav>
+      <a routerLink="/auth/login" routerLinkActive="active">Auth</a>
+      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+      <button *ngIf="isAuthenticated" (click)="logout()">Logout</button>
+    </nav>
+  </header>
+
+  <section class="content">
+    <router-outlet></router-outlet>
+  </section>
+</div>
