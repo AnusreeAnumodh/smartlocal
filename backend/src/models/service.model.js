@@ -6,7 +6,11 @@ const serviceSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     phone: { type: String, required: true, trim: true },
     city: { type: String, required: true, trim: true },
-    verified: { type: Boolean, default: false }
+    verified: { type: Boolean, default: false },
+    rating: { type: Number, default: 4.2 },
+    responseTimeMinutes: { type: Number, default: 15 },
+    availability: { type: String, default: 'available' },
+    highResponseRate: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

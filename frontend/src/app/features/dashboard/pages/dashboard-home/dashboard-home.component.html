@@ -1,29 +1,176 @@
-<app-page-shell title="Dashboard" subtitle="Service lookup and emergency actions.">
-  <p class="muted">Backend status: {{ backendStatus }}</p>
-
-  <section class="panel">
-    <h3>Find Services</h3>
-    <div class="row">
-      <select [(ngModel)]="category">
-        <option value="plumber">Plumber</option>
-        <option value="electrician">Electrician</option>
-        <option value="medical_store">Medical Store</option>
-        <option value="ambulance">Ambulance</option>
-      </select>
-      <input type="text" [(ngModel)]="city" placeholder="City" />
-      <button (click)="searchServices()">Search</button>
+<app-page-shell title="Dashboard" subtitle="Role-based view for provider discovery and business visibility.">
+  <section class="dashboard-hero">
+    <div>
+      <p class="eyebrow">Session</p>
+      <h3>{{ currentUserName }}</h3>
+      <p class="muted">{{ currentUserRole | uppercase }} · {{ backendMode }}</p>
+      <p class="muted" *ngIf="isUsingDemoData">Showing fallback data while the backend is unavailable.</p>
     </div>
-
-    <ul>
-      <li *ngFor="let item of services">
-        <strong>{{ item.name }}</strong> - {{ item.category | capitalize }} - {{ item.phone }}
-      </li>
-    </ul>
+    <span class="verify-pill">{{ currentUserRole | uppercase }}</span>
   </section>
 
-  <section class="panel emergency">
-    <h3>Emergency</h3>
-    <button class="sos" (click)="triggerSos()">One-Tap SOS</button>
-    <p *ngIf="sosMessage">{{ sosMessage }}</p>
-  </section>
+  <ng-container *ngIf="isUserView; else providerDashboard">
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Find providers</p>
+          <h3>Search by service and city</h3>
+        </div>
+        <p class="muted" *ngIf="providersSource">Source: {{ providersSource }}</p>
+      </div>
+
+      <div class="row compact-row">
+        <select [(ngModel)]="category">
+          <option value="plumber">Plumber</option>
+          <option value="electrician">Electrician</option>
+          <option value="medical_store">Medical Store</option>
+          <option value="ambulance">Ambulance</option>
+        </select>
+        <select [(ngModel)]="city">
+          <option *ngFor="let cityOption of cities" [value]="cityOption">{{ cityOption }}</option>
+        </select>
+        <button type="button" (click)="searchServices()">Update results</button>
+      </div>
+      <div class="loader-line" *ngIf="providersLoading || servicesLoading || recommendationLoading">
+        <span></span>
+      </div>
+    </section>
+
+    <section class="panel recommendation-panel" *ngIf="recommendation as item">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Recommended</p>
+          <h3>{{ item.provider.name }}</h3>
+        </div>
+        <span class="status-pill">{{ item.scoreBreakdown.rating }} ★</span>
+      </div>
+      <p class="muted">{{ item.reason }}</p>
+      <div class="meta-grid">
+        <p><strong>City:</strong> {{ item.provider.city }}</p>
+        <p><strong>Response time:</strong> {{ item.scoreBreakdown.responseTimeMinutes }} mins</p>
+        <p><strong>Status:</strong> {{ item.scoreBreakdown.availability | capitalize }}</p>
+        <p><strong>Contact:</strong> {{ item.provider.phone }}</p>
+      </div>
+    </section>
+    <p class="muted" *ngIf="recommendationLoading">Updating recommendation...</p>
+
+    <section class="provider-layout">
+      <article class="panel provider-list-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Providers</p>
+            <h3>{{ city }} {{ category | capitalize }}</h3>
+          </div>
+        </div>
+
+        <div class="provider-stack" *ngIf="providers.length; else noProviders">
+          <button
+            type="button"
+            class="provider-card"
+            *ngFor="let provider of providers"
+            [class.active]="provider.id === selectedProviderId"
+            (click)="selectProvider(provider.id)"
+          >
+            <div>
+              <strong>{{ provider.businessName }}</strong>
+              <span>{{ provider.ownerName }}</span>
+            </div>
+            <div class="provider-card-meta">
+              <span>{{ provider.city }}</span>
+              <span>{{ provider.rating }} ★</span>
+            </div>
+          </button>
+        </div>
+        <p class="muted" *ngIf="providersLoading">Loading providers...</p>
+
+        <ng-template #noProviders>
+          <p class="muted">No providers are available for this filter.</p>
+        </ng-template>
+      </article>
+
+      <article class="panel provider-detail-panel focus-panel" *ngIf="selectedProvider as provider">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Provider details</p>
+            <h3>{{ provider.businessName }}</h3>
+          </div>
+          <span class="verify-pill" [class.unverified]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
+        </div>
+
+        <div class="detail-grid">
+          <p><strong>Owner:</strong> {{ provider.ownerName }}</p>
+          <p><strong>Phone:</strong> {{ provider.mobile }}</p>
+          <p><strong>Email:</strong> {{ provider.email || 'Not shared' }}</p>
+          <p><strong>Location:</strong> {{ provider.address || provider.city }}</p>
+          <p><strong>Response time:</strong> {{ provider.responseTimeMinutes }} mins</p>
+          <p><strong>Availability:</strong> {{ provider.availability | capitalize }}</p>
+        </div>
+
+        <div class="offerings">
+          <p class="eyebrow">What they provide</p>
+          <div class="chip-row">
+            <span class="chip" *ngFor="let offering of providerOfferings">{{ offering }}</span>
+          </div>
+        </div>
+      </article>
+    </section>
+  </ng-container>
+
+  <ng-template #providerDashboard>
+    <section class="provider-layout" *ngIf="providerProfile as provider">
+      <article class="panel provider-detail-panel focus-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Your business</p>
+            <h3>{{ provider.businessName }}</h3>
+          </div>
+          <span class="verify-pill" [class.unverified]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
+        </div>
+
+        <div class="detail-grid">
+          <p><strong>Category:</strong> {{ provider.category | capitalize }}</p>
+          <p><strong>City:</strong> {{ provider.city }}</p>
+          <p><strong>Phone:</strong> {{ provider.mobile }}</p>
+          <p><strong>Email:</strong> {{ provider.email || 'Not shared' }}</p>
+          <p><strong>Availability:</strong> {{ provider.availability | capitalize }}</p>
+          <p><strong>Experience:</strong> {{ provider.experienceYears }} years</p>
+        </div>
+
+        <div class="offerings">
+          <p class="eyebrow">Visible services</p>
+          <div class="chip-row">
+            <span class="chip" *ngFor="let offering of providerAudienceOfferings">{{ offering }}</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel provider-summary-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">How users see you</p>
+            <h3>{{ provider.rating }} ★ rated provider</h3>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <article class="summary-card">
+            <span>Response time</span>
+            <strong>{{ provider.responseTimeMinutes }} mins</strong>
+          </article>
+          <article class="summary-card">
+            <span>City reach</span>
+            <strong>{{ provider.city }}</strong>
+          </article>
+          <article class="summary-card">
+            <span>Status</span>
+            <strong>{{ provider.availability | capitalize }}</strong>
+          </article>
+        </div>
+
+        <p class="muted provider-note">
+          Users filtering for {{ provider.category | capitalize }} in {{ provider.city }} will see your contact details and offerings here.
+        </p>
+      </article>
+    </section>
+  </ng-template>
 </app-page-shell>

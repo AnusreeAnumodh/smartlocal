@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
 import { SessionService } from './core/services/session.service';
+import { AuthService } from './features/auth/services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -8,14 +8,28 @@ import { SessionService } from './core/services/session.service';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  constructor(private sessionService: SessionService, private router: Router) {}
+  constructor(
+    private sessionService: SessionService,
+    private authService: AuthService
+  ) {}
 
   get isAuthenticated(): boolean {
     return this.sessionService.isAuthenticated;
   }
 
+  get currentUserName(): string {
+    return this.sessionService.session?.user.fullName ?? 'Guest';
+  }
+
+  get currentUserRole(): string {
+    return this.sessionService.session?.user.role ?? 'visitor';
+  }
+
+  get showSessionCopy(): boolean {
+    return this.isAuthenticated && this.currentUserRole !== 'guest';
+  }
+
   logout(): void {
-    this.sessionService.clearToken();
-    this.router.navigate(['/auth/login']);
+    this.authService.logout();
   }
 }

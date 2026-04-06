@@ -1,0 +1,258 @@
+SMART LOCAL SERVICES FINDER
+SYSTEM DESIGN, DIAGRAMS, DATABASE, AND NORMALIZATION
+Presentation Text Version
+Generated on: 2026-03-22
+
+====================================================================
+0. PROJECT OVERVIEW
+====================================================================
+SmartLocal is a full-stack web system that helps users find trusted local
+service providers and trigger SOS emergency alerts using current location.
+
+Tech stack:
+- Frontend: Angular 18 + SCSS
+- Backend: Node.js + Express
+- Database: MongoDB + Mongoose
+- API Style: REST + JSON
+
+Core runtime capabilities:
+- Search services by category and city
+- Trigger SOS with geolocation
+- Health monitoring endpoint
+- Fallback mode when MongoDB is unavailable
+
+====================================================================
+1. HIGH-LEVEL ARCHITECTURE
+====================================================================
+Architecture type: 3-tier
+1) Presentation Layer: Angular app (Auth + Dashboard modules)
+2) Application Layer: Express routes/controllers
+3) Data Layer: MongoDB collections
+
+Main components:
+- End User (Browser / Mobile Web)
+- Angular Frontend (AuthGuard, ApiService, feature modules)
+- Express Backend (/api/health, /api/services, /api/emergency/sos)
+- MongoDB (services, sosalerts)
+
+Key design decisions:
+- Feature-based Angular modularization
+- Controller-based backend business logic
+- DB fallback startup mode for resilience
+- Verified-first service sorting
+- HTTP 202 for queued SOS acknowledgement
+
+====================================================================
+2. FLOW DIAGRAM SUMMARY
+====================================================================
+2.1 Service Search Flow
+User -> Dashboard -> LocalServicesService -> ApiService -> Express Route
+-> Controller -> MongoDB/Fallback -> JSON response -> UI list rendering
+
+Request:
+GET /api/services?category=<value>&city=<value>
+
+Response:
+{ count, data, source }
+
+2.2 SOS Flow
+User taps SOS -> browser geolocation -> POST /api/emergency/sos
+-> backend validation -> DB create / fallback response -> user acknowledgement
+
+Alternative paths:
+- Geolocation unavailable
+- Permission denied
+- DB unavailable (fallback 202)
+- API/network failure
+
+====================================================================
+3. USE CASES AND CLASS MODEL
+====================================================================
+3.1 Use Cases
+UC-01 Login
+- Preconditions: login page available
+- Outcome: token saved; redirected to dashboard
+
+UC-02 Search Services
+- Preconditions: user on dashboard
+- Outcome: filtered service data displayed
+
+UC-03 Trigger SOS
+- Preconditions: location permission granted
+- Outcome: alert queued and user notified
+
+UC-04 Health Check
+- Preconditions: backend reachable
+- Outcome: status/mode shown on dashboard
+
+UC-05 Fallback Operations
+- Preconditions: DB unavailable
+- Outcome: system serves fallback responses
+
+UC-06 Session Guard
+- Preconditions: unauthenticated access to protected route
+- Outcome: redirect to /auth/login
+
+3.2 Core Class/Component Responsibilities
+Frontend:
+- DashboardHomeComponent: orchestration of search and SOS UI actions
+- LocalServicesService: domain API calls
+- ApiService: generic GET/POST wrapper
+- SessionService: token store and auth state
+
+Backend:
+- service.controller: bootstrap and list services
+- emergency.controller: validate and queue SOS alerts
+- Service model: provider listings schema
+- SosAlert model: emergency alert schema
+
+====================================================================
+4. DATABASE DESIGN AND ER MODEL
+====================================================================
+4.1 Implemented Collections
+Collection: services
+- _id (ObjectId, PK)
+- category (String, required)
+- name (String, required)
+- phone (String, required)
+- city (String, required)
+- verified (Boolean, default false)
+- createdAt, updatedAt
+
+Collection: sosalerts
+- _id (ObjectId, PK)
+- userName (String, default Anonymous)
+- phone (String, default N/A)
+- latitude (Number, required)
+- longitude (Number, required)
+- status (String, default queued)
+- createdAt, updatedAt
+
+4.2 ER Note
+Current implemented model uses independent collections without explicit FK
+relationships. Operational linkage exists through user workflows.
+
+4.3 Recommended Indexes
+- services: { category: 1, city: 1, verified: -1 }
+- sosalerts: { status: 1, createdAt: -1 }
+
+====================================================================
+5. NORMALIZATION ANALYSIS
+====================================================================
+Relational mapping used for analysis:
+R1(service_id, category, name, phone, city, verified, created_at, updated_at)
+R2(alert_id, user_name, phone, latitude, longitude, status, created_at, updated_at)
+
+1NF: satisfied (atomic values, no repeating groups)
+2NF: satisfied (single-attribute PKs; no partial dependencies)
+3NF: satisfied (no transitive non-key dependencies in current model)
+BCNF: likely satisfied for current MVP dependency set
+
+Final normalization level: 3NF (effective)
+
+====================================================================
+6. ACTIVITY DIAGRAM (TEXT SUMMARY)
+====================================================================
+Start
+-> User opens dashboard
+-> Selects category/city
+-> Frontend calls GET /api/services
+-> Backend fetches DB/fallback data
+-> UI displays services
+-> User taps SOS
+-> Frontend requests geolocation
+-> Decision: location granted?
+   Yes -> POST /api/emergency/sos -> queued response
+   No  -> permission denied message
+-> End
+
+Activity design goal:
+Ensure explicit success and failure messaging so emergency UX remains clear.
+
+====================================================================
+7. SEQUENCE DIAGRAM (TEXT SUMMARY: SOS PATH)
+====================================================================
+Actors:
+- User
+- Frontend
+- ApiService
+- Backend
+- MongoDB
+
+Message flow:
+1) User -> Frontend: tap SOS
+2) Frontend -> ApiService: triggerSos(payload)
+3) ApiService -> Backend: POST /api/emergency/sos
+4) Backend -> MongoDB: create alert
+5) MongoDB -> Backend: alert id/status
+6) Backend -> Frontend: 202 Accepted
+7) Frontend -> User: show result
+
+Fallback branch:
+If DB unavailable, backend returns fallback queued response with 202.
+
+====================================================================
+8. ALL POSSIBLE TABLES / COLLECTIONS
+====================================================================
+8.1 Implemented
+- services
+- sosalerts
+
+8.2 Recommended Full-Scale Tables
+- users
+- providers
+- service_categories
+- services
+- provider_availability
+- sos_alerts
+- emergency_dispatch_logs
+- reviews
+- bookings
+- payments
+- notifications
+- audit_logs
+
+8.3 Relationship Summary
+- users -> providers (1:1)
+- providers -> services (1:N)
+- users -> bookings (1:N)
+- services -> reviews (1:N)
+- users -> sos_alerts (1:N)
+- sos_alerts -> emergency_dispatch_logs (1:N)
+- bookings -> payments (1:N)
+
+====================================================================
+9. ENHANCEMENTS AND DETAILED ENGINEERING NOTES
+====================================================================
+9.1 Security
+- JWT access + refresh token strategy
+- Password hashing using Argon2/bcrypt
+- RBAC (user/provider/admin)
+- Input validation (zod/joi)
+- Rate limiting for auth/SOS endpoints
+- Encrypt sensitive PII
+
+9.2 Performance
+- Compound indexes for common filters
+- Geospatial indexes for nearby search
+- Cache static metadata
+- Async queue workers for SOS dispatch
+- Pagination for service results
+- Route-level profiling and tracing
+
+9.3 Testing Strategy
+- Frontend unit/component tests
+- Backend unit/integration tests
+- API contract tests
+- End-to-end journey tests
+- Security testing (static + DAST)
+
+9.4 Roadmap
+Phase 1: Auth + role schema
+Phase 2: Booking/reviews/payments
+Phase 3: Real dispatch integration
+Phase 4: Observability + SLO monitoring
+
+====================================================================
+END OF DOCUMENT
+====================================================================

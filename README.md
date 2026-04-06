@@ -68,6 +68,7 @@ cp backend/.env.example backend/.env
 ```
 
 Set `MONGODB_URI` in `backend/.env`.
+If MongoDB is temporarily unavailable, you can set `ALLOW_START_WITHOUT_DB=true` to run API in fallback mode.
 
 ### 3) Run backend
 
@@ -87,15 +88,27 @@ Angular frontend runs on `http://localhost:4200`.
 
 ## API Endpoints
 - `GET /api/health`
+- `POST /api/auth/login`
+- `POST /api/auth/register/provider`
 - `GET /api/services?category=plumber&city=Hyderabad`
+- `GET /api/services/recommendation?category=plumber&city=Hyderabad`
+- `GET /api/providers?category=plumber&city=Hyderabad`
 - `POST /api/emergency/sos`
+- `POST /api/emergency/analyze`
+- `GET /api/smart-lock/overview`
+- `POST /api/smart-lock/action`
 
 ## Included Starter Features
 - MongoDB connection on server startup
 - Seeded default local services if DB is empty
 - Service listing with category/city filters
+- Provider registration and mobile-number login flow
+- Registered providers visible in dashboard and service search
+- AI-style provider recommendation based on rating, response time, verification, and availability
+- Emergency assistant endpoint with priority prediction and next-step guidance
 - SOS alert persistence in MongoDB
-- Angular UI with service search and one-tap SOS flow
+- Dynamic smart-lock dashboard with live lock controls and activity feed
+- Angular UI with service search, one-tap SOS flow, AI recommendation, and emergency guidance
 
 ## Next Milestones
 1. Add authentication (users/providers/admin)

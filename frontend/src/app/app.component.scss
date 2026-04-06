@@ -6,36 +6,119 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background: #102a43;
-  color: #ffffff;
+  padding: 1rem 1.35rem;
+  margin: 0 auto;
+  max-width: 1280px;
+  background: transparent;
+  color: var(--ink-strong);
 
-  nav {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
+  .eyebrow {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand-warm);
+    font-weight: 700;
   }
 
-  a,
+  h1 {
+    margin: 0.2rem 0 0;
+    font-size: 1.28rem;
+    font-weight: 800;
+    color: var(--ink-strong);
+  }
+
   button {
     color: #ffffff;
-    text-decoration: none;
-    background: transparent;
-    border: 1px solid #d9e2ec;
-    border-radius: 8px;
-    padding: 0.35rem 0.75rem;
-  }
-
-  a.active {
-    background: #0b69ff;
-    border-color: #0b69ff;
-  }
-
-  button {
+    background: linear-gradient(135deg, var(--brand-deep), #1f7a8c);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
     cursor: pointer;
+    font-weight: 700;
   }
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.brand-mark {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--brand-deep), #1f7a8c);
+  box-shadow: 0 14px 28px rgba(21, 76, 121, 0.22);
+}
+
+.brand-ring,
+.brand-core {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 999px;
+}
+
+.brand-ring {
+  width: 28px;
+  height: 22px;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  top: 7px;
+}
+
+.brand-core {
+  width: 16px;
+  height: 18px;
+  background: var(--brand-warm);
+  bottom: 11px;
+  border-radius: 6px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.session-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.session-label,
+.session-role {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.session-copy strong {
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
 .content {
-  padding: 1rem;
+  padding: 0 1rem 1rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+@media (max-width: 720px) {
+  .topbar,
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .session-copy {
+    align-items: flex-start;
+  }
+
+  .content {
+    padding-top: 0.25rem;
+  }
 }

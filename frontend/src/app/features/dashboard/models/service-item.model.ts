@@ -5,4 +5,8 @@ export interface ServiceItem {
   phone: string;
   city: string;
   verified: boolean;
+  rating?: number;
+  responseTimeMinutes?: number;
+  availability?: string;
+  highResponseRate?: boolean;
 }

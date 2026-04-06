@@ -1,0 +1,356 @@
+SMART LOCAL SERVICES FINDER & EMERGENCY ASSISTANCE SYSTEM
+PROJECT TECHNICAL DOCUMENTATION
+Generated on: 2026-03-22
+
+====================================================================
+1. SYSTEM DESIGN OVERVIEW
+====================================================================
+
+1.1 Objective
+The system helps users:
+- find trusted local service providers by category and city
+- trigger SOS emergency alerts with current geolocation
+
+1.2 Technology Stack
+- Frontend: Angular 18 (feature modules, lazy loading, SCSS)
+- Backend: Node.js + Express (REST API)
+- Database: MongoDB (Mongoose ODM)
+- Communication: JSON over HTTP
+
+1.3 Architectural Style
+- 3-tier architecture
+  1) Presentation layer: Angular UI
+  2) Application/API layer: Express routes + controllers
+  3) Data layer: MongoDB collections (Service, SosAlert)
+
+====================================================================
+2. HIGH-LEVEL SYSTEM DIAGRAM
+====================================================================
+
++---------------------------+           +----------------------------+
+|        End User           |           |        MongoDB             |
+| (Browser / Mobile Web)    |           |  Collections:              |
++-------------+-------------+           |  - services                |
+              |                         |  - sosalerts               |
+              | HTTPS (JSON)            +--------------+-------------+
+              v                                        ^
++---------------------------+                          |
+|   Angular Frontend        |                          |
+| - Auth module             |                          |
+| - Dashboard module        |                          |
+| - ApiService              |                          |
++-------------+-------------+                          |
+              |                                        |
+              | HTTP /api/*                            |
+              v                                        |
++---------------------------+     Mongoose ODM         |
+|   Node.js + Express API   +--------------------------+
+| - /api/health             |
+| - /api/services           |
+| - /api/emergency/sos      |
+| - Fallback mode support   |
++---------------------------+
+
+====================================================================
+3. FLOW DIAGRAMS
+====================================================================
+
+3.1 Service Search Flow
+
+User -> Dashboard UI -> LocalServicesService.getServices(category, city)
+     -> ApiService GET /api/services?category=&city=
+     -> Express Route (/api/services)
+     -> service.controller.listServices()
+     -> if DB connected: Service.find(query)
+        else fallback seedServices filter
+     -> JSON response (count, data, source)
+     -> UI renders service cards/list
+
+3.2 SOS Alert Flow
+
+User clicks SOS
+  -> Browser geolocation permission request
+    -> if denied: UI shows "Location permission denied"
+    -> if granted:
+       -> LocalServicesService.triggerSos(payload)
+       -> ApiService POST /api/emergency/sos
+       -> emergency.controller.triggerSos()
+       -> validate latitude/longitude
+       -> if DB connected: SosAlert.create(...)
+          else create fallback in-memory response
+       -> return 202 Accepted + alert summary
+       -> UI shows success/failure message
+
+====================================================================
+4. USE CASE DIAGRAM (TEXTUAL)
+====================================================================
+
+Primary Actor: End User
+Supporting Actor: MongoDB Database
+
++--------------------+-----------------------------------------------+
+| Use Case ID        | UC-01                                         |
++--------------------+-----------------------------------------------+
+| Name               | Login to Application                          |
+| Actor              | End User                                      |
+| Preconditions      | Login page is accessible                      |
+| Main Flow          | Enter email/password -> submit -> token set   |
+| Postconditions     | Session token stored, dashboard accessible    |
++--------------------+-----------------------------------------------+
+
++--------------------+-----------------------------------------------+
+| Use Case ID        | UC-02                                         |
++--------------------+-----------------------------------------------+
+| Name               | Search Local Services                         |
+| Actor              | End User                                      |
+| Preconditions      | User authenticated and on dashboard           |
+| Main Flow          | Select category/city -> call /api/services    |
+| Postconditions     | Filtered service list displayed               |
++--------------------+-----------------------------------------------+
+
++--------------------+-----------------------------------------------+
+| Use Case ID        | UC-03                                         |
++--------------------+-----------------------------------------------+
+| Name               | Trigger SOS Alert                             |
+| Actor              | End User                                      |
+| Preconditions      | User grants geolocation permission            |
+| Main Flow          | Capture location -> POST /api/emergency/sos   |
+| Postconditions     | Alert queued and acknowledgement shown        |
++--------------------+-----------------------------------------------+
+
++--------------------+-----------------------------------------------+
+| Use Case ID        | UC-04                                         |
++--------------------+-----------------------------------------------+
+| Name               | Health Monitoring                             |
+| Actor              | Frontend System Component                     |
+| Preconditions      | Backend URL configured                        |
+| Main Flow          | Call /api/health on dashboard init            |
+| Postconditions     | Backend status shown to user                  |
++--------------------+-----------------------------------------------+
+
+====================================================================
+5. CLASS DIAGRAM (APPLICATION CLASSES)
+====================================================================
+
+[Frontend]
+
++-----------------------+
+| SessionService        |
++-----------------------+
+| + token: string|null  |
+| + isAuthenticated     |
+| + setToken()          |
+| + clearToken()        |
++-----------------------+
+
++-----------------------+         uses         +----------------------+
+| AuthService           +----------------------> SessionService       |
++-----------------------+                       +----------------------+
+| + login(payload)      |
++-----------------------+
+          |
+          | navigates
+          v
+      Angular Router
+
++-----------------------+         uses         +----------------------+
+| LocalServicesService  +----------------------> ApiService           |
++-----------------------+                       +----------------------+
+| + getHealth()         |                       | + get(endpoint)      |
+| + getServices()       |                       | + post(endpoint)     |
+| + triggerSos()        |                       +----------------------+
++-----------------------+
+
++-----------------------+
+| DashboardHomeComponent|
++-----------------------+
+| + searchServices()    |
+| + triggerSos()        |
+| + ngOnInit()          |
++-----------------------+
+            |
+            | depends on
+            v
+   LocalServicesService
+
+[Backend]
+
++-----------------------+      uses      +-------------------------+
+| ServiceController     +--------------->| Service (Mongoose Model)|
++-----------------------+                +-------------------------+
+| + bootstrapServices() |
+| + listServices()      |
++-----------------------+
+
++-----------------------+      uses      +-------------------------+
+| EmergencyController   +--------------->| SosAlert (Mongoose Model)|
++-----------------------+                +-------------------------+
+| + triggerSos()        |
++-----------------------+
+
+====================================================================
+6. DATABASE DESIGN
+====================================================================
+
+6.1 Database Type
+- MongoDB document database
+- Access via Mongoose schemas/models
+
+6.2 Collection: services
+
++----------------+----------+----------+----------------------------+
+| Field          | Type     | Required | Notes                      |
++----------------+----------+----------+----------------------------+
+| _id            | ObjectId | Yes      | Primary identifier         |
+| category       | String   | Yes      | Lowercased, indexed by use |
+| name           | String   | Yes      | Service provider name      |
+| phone          | String   | Yes      | Contact number             |
+| city           | String   | Yes      | City filter key            |
+| verified       | Boolean  | No       | Default false              |
+| createdAt      | Date     | Auto     | Mongoose timestamp         |
+| updatedAt      | Date     | Auto     | Mongoose timestamp         |
++----------------+----------+----------+----------------------------+
+
+6.3 Collection: sosalerts
+
++----------------+----------+----------+----------------------------+
+| Field          | Type     | Required | Notes                      |
++----------------+----------+----------+----------------------------+
+| _id            | ObjectId | Yes      | Primary identifier         |
+| userName       | String   | No       | Default 'Anonymous'        |
+| phone          | String   | No       | Default 'N/A'              |
+| latitude       | Number   | Yes      | Required geolocation       |
+| longitude      | Number   | Yes      | Required geolocation       |
+| status         | String   | No       | Default 'queued'           |
+| createdAt      | Date     | Auto     | Mongoose timestamp         |
+| updatedAt      | Date     | Auto     | Mongoose timestamp         |
++----------------+----------+----------+----------------------------+
+
+6.4 Suggested Indexes (for scale)
+- services: { category: 1, city: 1, verified: -1 }
+- sosalerts: { status: 1, createdAt: -1 }
+
+====================================================================
+7. ER DIAGRAM (ENTITY RELATIONSHIP)
+====================================================================
+
+Current implemented schema stores independent entities.
+No foreign key relationship is currently implemented.
+
++------------------------+        (logical/operational association)
+|        Service         | <--------------------------------------+
++------------------------+                                        |
+| _id (PK)               |                                        |
+| category               |                                        |
+| name                   |                                        |
+| phone                  |                                        |
+| city                   |                                        |
+| verified               |                                        |
+| createdAt              |                                        |
+| updatedAt              |                                        |
++------------------------+                                        |
+                                                                  |
++------------------------+                                        |
+|        SosAlert        | ---------------------------------------+
++------------------------+
+| _id (PK)               |
+| userName               |
+| phone                  |
+| latitude               |
+| longitude              |
+| status                 |
+| createdAt              |
+| updatedAt              |
++------------------------+
+
+Note: In future, a User entity can be introduced and related to SosAlert
+(1 user : many alerts), and Service can reference Provider/User entities.
+
+====================================================================
+8. DATABASE TABLES / COLLECTION SNAPSHOT
+====================================================================
+
+Since MongoDB is used, physical storage is collections (document sets).
+Equivalent relational representation:
+
+Table: services
+- service_id (PK)
+- category
+- name
+- phone
+- city
+- verified
+- created_at
+- updated_at
+
+Table: sos_alerts
+- alert_id (PK)
+- user_name
+- phone
+- latitude
+- longitude
+- status
+- created_at
+- updated_at
+
+====================================================================
+9. NORMALIZATION ANALYSIS
+====================================================================
+
+9.1 Assumed Relational Form for Normalization Review
+R1( service_id, category, name, phone, city, verified, created_at, updated_at )
+R2( alert_id, user_name, phone, latitude, longitude, status, created_at, updated_at )
+
+9.2 First Normal Form (1NF)
+- All attributes are atomic (single values)
+- No repeating groups
+Status: Satisfied for R1 and R2
+
+9.3 Second Normal Form (2NF)
+- Primary key in each relation is single-column
+- No partial dependency possible
+Status: Satisfied for R1 and R2
+
+9.4 Third Normal Form (3NF)
+- Non-key attributes depend on key, not on other non-key attributes
+- No transitive dependencies identified in current schema
+Status: Satisfied for R1 and R2
+
+9.5 Level of Normalization Achieved
+- Effective level: 3NF (for relational mapping of current collections)
+
+9.6 BCNF Note
+- Appears BCNF-compliant under current simple functional dependencies,
+  but this should be re-evaluated when user/provider/review entities are added.
+
+====================================================================
+10. API SUMMARY
+====================================================================
+
+- GET  /api/health
+  Returns service status, DB mode, and timestamp
+
+- GET  /api/services?category={value}&city={value}
+  Returns filtered service list sorted by verified and created time
+
+- POST /api/emergency/sos
+  Body: { userName, phone, latitude, longitude }
+  Returns 202 Accepted with queued alert payload
+
+====================================================================
+11. DESIGN OBSERVATIONS AND NEXT DESIGN STEPS
+====================================================================
+
+- Current design is suitable for MVP and demo usage.
+- Authentication is placeholder (demo token), not secure production auth.
+- No explicit entity relationships yet (User, Provider, Review missing).
+- For production-scale architecture, add:
+  1) JWT-based auth + user roles
+  2) provider verification workflow
+  3) geospatial indexes for nearby search
+  4) SOS dispatch integration (SMS/call/WhatsApp)
+  5) audit logging and observability
+
+====================================================================
+END OF DOCUMENT
+====================================================================

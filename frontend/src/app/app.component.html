@@ -1,11 +1,23 @@
 <div class="layout">
   <header class="topbar">
-    <h1>Smart Local Services</h1>
-    <nav>
-      <a routerLink="/auth/login" routerLinkActive="active">Auth</a>
-      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <span class="brand-ring"></span>
+        <span class="brand-core"></span>
+      </div>
+      <div>
+        <p class="eyebrow">SmartLocal</p>
+        <h1>Service and Emergency Console</h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="session-copy" *ngIf="showSessionCopy">
+        <span class="session-label">Signed in as</span>
+        <strong>{{ currentUserName }}</strong>
+        <span class="session-role">{{ currentUserRole }}</span>
+      </div>
       <button *ngIf="isAuthenticated" (click)="logout()">Logout</button>
-    </nav>
+    </div>
   </header>
 
   <section class="content">
