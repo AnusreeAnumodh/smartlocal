@@ -1,16 +1,57 @@
 <app-page-shell title="Dashboard" subtitle="Role-based view for provider discovery and business visibility.">
   <section class="dashboard-hero">
-    <div>
-      <p class="eyebrow">Session</p>
+    <div class="hero-copy">
+      <p class="eyebrow">Session overview</p>
       <h3>{{ currentUserName }}</h3>
       <p class="muted">{{ currentUserRole | uppercase }} · {{ backendMode }}</p>
       <p class="muted" *ngIf="isUsingDemoData">Showing fallback data while the backend is unavailable.</p>
     </div>
-    <span class="verify-pill">{{ currentUserRole | uppercase }}</span>
+    <div class="hero-badges">
+      <span class="verify-pill">{{ currentUserRole | uppercase }}</span>
+      <span class="status-note">{{ backendStatus }}</span>
+    </div>
   </section>
 
+  <section class="spotlight-grid" *ngIf="isUserView">
+    <article class="spotlight-card warm-card">
+      <span class="spotlight-label">Providers in view</span>
+      <strong>{{ providers.length }}</strong>
+      <p>{{ city }} {{ category | capitalize }} options loaded for comparison.</p>
+    </article>
+    <article class="spotlight-card cool-card">
+      <span class="spotlight-label">AI recommendation</span>
+      <strong>{{ recommendation ? recommendation.provider.name : 'Updating...' }}</strong>
+      <p>{{ recommendation ? recommendation.reason : 'Best-fit provider is being recalculated.' }}</p>
+    </article>
+    <article class="spotlight-card mint-card">
+      <span class="spotlight-label">Live mode</span>
+      <strong>{{ isUsingDemoData ? 'Demo fallback' : 'Backend connected' }}</strong>
+      <p>{{ providersSource || 'Provider source will appear after search.' }}</p>
+    </article>
+  </section>
+
+  <ng-container *ngIf="isProviderView">
+    <section class="spotlight-grid provider-spotlight" *ngIf="providerProfile as provider">
+      <article class="spotlight-card warm-card">
+        <span class="spotlight-label">Business name</span>
+        <strong>{{ provider.businessName }}</strong>
+        <p>Your storefront appears in local discovery for verified users.</p>
+      </article>
+      <article class="spotlight-card cool-card">
+        <span class="spotlight-label">Rating</span>
+        <strong>{{ provider.rating }} ★</strong>
+        <p>Visible trust score shown to local users browsing your category.</p>
+      </article>
+      <article class="spotlight-card mint-card">
+        <span class="spotlight-label">Response time</span>
+        <strong>{{ provider.responseTimeMinutes }} mins</strong>
+        <p>Fast response positioning helps you surface higher in intent-heavy searches.</p>
+      </article>
+    </section>
+  </ng-container>
+
   <ng-container *ngIf="isUserView; else providerDashboard">
-    <section class="panel">
+    <section class="panel search-panel">
       <div class="panel-header">
         <div>
           <p class="eyebrow">Find providers</p>
@@ -19,16 +60,22 @@
         <p class="muted" *ngIf="providersSource">Source: {{ providersSource }}</p>
       </div>
 
-      <div class="row compact-row">
-        <select [(ngModel)]="category">
-          <option value="plumber">Plumber</option>
-          <option value="electrician">Electrician</option>
-          <option value="medical_store">Medical Store</option>
-          <option value="ambulance">Ambulance</option>
-        </select>
-        <select [(ngModel)]="city">
-          <option *ngFor="let cityOption of cities" [value]="cityOption">{{ cityOption }}</option>
-        </select>
+      <div class="row compact-row filter-row">
+        <label class="inline-field">
+          <span>Category</span>
+          <select [(ngModel)]="category">
+            <option value="plumber">Plumber</option>
+            <option value="electrician">Electrician</option>
+            <option value="medical_store">Medical Store</option>
+            <option value="ambulance">Ambulance</option>
+          </select>
+        </label>
+        <label class="inline-field">
+          <span>City</span>
+          <select [(ngModel)]="city">
+            <option *ngFor="let cityOption of cities" [value]="cityOption">{{ cityOption }}</option>
+          </select>
+        </label>
         <button type="button" (click)="searchServices()">Update results</button>
       </div>
       <div class="loader-line" *ngIf="providersLoading || servicesLoading || recommendationLoading">
@@ -52,7 +99,7 @@
         <p><strong>Contact:</strong> {{ item.provider.phone }}</p>
       </div>
     </section>
-    <p class="muted" *ngIf="recommendationLoading">Updating recommendation...</p>
+    <p class="muted recommendation-copy" *ngIf="recommendationLoading">Updating recommendation...</p>
 
     <section class="provider-layout">
       <article class="panel provider-list-panel">
@@ -61,6 +108,7 @@
             <p class="eyebrow">Providers</p>
             <h3>{{ city }} {{ category | capitalize }}</h3>
           </div>
+          <span class="count-pill">{{ providers.length }} results</span>
         </div>
 
         <div class="provider-stack" *ngIf="providers.length; else noProviders">

@@ -1,40 +1,89 @@
 <section class="auth-shell">
+  <article class="auth-showcase">
+    <p class="eyebrow">Connected local response</p>
+    <h1>Local help, faster and easier.</h1>
+    <p class="muted intro-copy">
+      Discover trusted providers, surface emergency options quickly, and switch between user and provider journeys without friction.
+    </p>
+
+    <div class="showcase-grid">
+      <article class="showcase-card primary-card">
+        <span class="showcase-label">Live access</span>
+        <strong>24x7 emergency-first flow</strong>
+        <p>Designed for fast action on mobile, tablet, and desktop with clear touch targets and bold visual feedback.</p>
+      </article>
+      <article class="showcase-card stat-card">
+        <span class="stat-value">10+</span>
+        <span class="stat-label">Kerala city presets</span>
+      </article>
+      <article class="showcase-card stat-card">
+        <span class="stat-value">4</span>
+        <span class="stat-label">core service categories</span>
+      </article>
+    </div>
+  </article>
+
   <article class="auth-card">
-    <p class="eyebrow">SmartLocal</p>
-    <h1>{{ mode === 'login' ? 'Sign in' : 'Sign up' }}</h1>
-    <p class="muted" *ngIf="mode === 'signup'">Create a user or provider account.</p>
+    <div class="auth-card-head">
+      <div>
+        <p class="eyebrow">SmartLocal access</p>
+        <h2>{{ mode === 'login' ? 'Sign in' : 'Create account' }}</h2>
+        <p class="muted">{{ mode === 'login' ? 'Pick up where you left off or continue as guest.' : 'Set up a user or provider account in a few quick steps.' }}</p>
+      </div>
+      <div class="mode-switch">
+        <button type="button" [class.active]="mode === 'login'" (click)="setMode('login')">Login</button>
+        <button type="button" [class.active]="mode === 'signup'" (click)="setMode('signup')">Sign up</button>
+      </div>
+    </div>
 
     <form class="auth-form" *ngIf="mode === 'login'" (ngSubmit)="submit()">
-      <input id="mobile" type="text" [(ngModel)]="form.mobile" name="mobile" placeholder="Mobile number or email ID" required />
+      <div class="field">
+        <label for="mobile">Mobile or Email</label>
+        <input id="mobile" type="text" [(ngModel)]="form.mobile" name="mobile" placeholder="name@example.com or +91 98xxxxxxx" required />
+      </div>
 
-      <input id="password" type="password" [(ngModel)]="form.password" name="password" placeholder="Password" required />
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" [(ngModel)]="form.password" name="password" placeholder="Enter your password" required />
+      </div>
 
-      <button type="submit" [disabled]="loading">{{ loading ? 'Signing in...' : 'Continue' }}</button>
-      <button type="button" class="ghost-button" (click)="continueAsGuest()" [disabled]="loading">Continue as guest</button>
+      <div class="action-row">
+        <button type="submit" [disabled]="loading">{{ loading ? 'Signing in...' : 'Continue' }}</button>
+        <button type="button" class="ghost-button" (click)="continueAsGuest()" [disabled]="loading">Continue as guest</button>
+      </div>
     </form>
 
     <form class="auth-form" *ngIf="mode === 'signup'" (ngSubmit)="signUp()">
-      <label for="fullName">Full Name</label>
-      <input id="fullName" type="text" [(ngModel)]="signUpForm.fullName" name="fullName" required />
-
-      <label for="signupMobile">Mobile Number</label>
-      <input id="signupMobile" type="text" [(ngModel)]="signUpForm.mobile" name="signupMobile" required />
-
-      <label for="signupEmail">Email</label>
-      <input id="signupEmail" type="email" [(ngModel)]="signUpForm.email" name="signupEmail" />
-
-      <label for="signupPassword">Password</label>
-      <input id="signupPassword" type="password" [(ngModel)]="signUpForm.password" name="signupPassword" required />
+      <div class="field">
+        <label for="fullName">Full Name</label>
+        <input id="fullName" type="text" [(ngModel)]="signUpForm.fullName" name="fullName" placeholder="Your full name" required />
+      </div>
 
       <div class="two-col">
-        <div>
+        <div class="field">
+          <label for="signupMobile">Mobile Number</label>
+          <input id="signupMobile" type="text" [(ngModel)]="signUpForm.mobile" name="signupMobile" placeholder="+91 98xxxxxxx" required />
+        </div>
+        <div class="field">
+          <label for="signupEmail">Email</label>
+          <input id="signupEmail" type="email" [(ngModel)]="signUpForm.email" name="signupEmail" placeholder="name@example.com" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="signupPassword">Password</label>
+        <input id="signupPassword" type="password" [(ngModel)]="signUpForm.password" name="signupPassword" placeholder="Create a secure password" required />
+      </div>
+
+      <div class="two-col">
+        <div class="field">
           <label for="signupRole">Account Type</label>
           <select id="signupRole" [(ngModel)]="signUpForm.role" name="signupRole">
             <option value="user">User</option>
             <option value="provider">Provider</option>
           </select>
         </div>
-        <div>
+        <div class="field">
           <label for="signupCity">City</label>
           <select id="signupCity" [(ngModel)]="signUpForm.city" name="signupCity">
             <option *ngFor="let city of keralaCities" [value]="city">{{ city }}</option>
@@ -43,31 +92,31 @@
       </div>
 
       <div class="two-col" *ngIf="signUpForm.role === 'user'">
-        <div>
+        <div class="field">
           <label for="accountType">Profile Type</label>
           <select id="accountType" [(ngModel)]="signUpForm.accountType" name="accountType">
             <option value="individual">Individual</option>
             <option value="community">Community</option>
           </select>
         </div>
-        <div>
+        <div class="field">
           <label for="locality">Locality</label>
-          <input id="locality" type="text" [(ngModel)]="signUpForm.locality" name="locality" />
+          <input id="locality" type="text" [(ngModel)]="signUpForm.locality" name="locality" placeholder="Neighborhood or area" />
         </div>
       </div>
 
-      <div *ngIf="showCommunityFields">
+      <div class="field" *ngIf="showCommunityFields">
         <label for="communityName">Community Name</label>
-        <input id="communityName" type="text" [(ngModel)]="signUpForm.communityName" name="communityName" />
+        <input id="communityName" type="text" [(ngModel)]="signUpForm.communityName" name="communityName" placeholder="Apartment or association name" />
       </div>
 
-      <div *ngIf="showProviderFields">
+      <div class="field" *ngIf="showProviderFields">
         <label for="businessName">Business Name</label>
-        <input id="businessName" type="text" [(ngModel)]="signUpForm.businessName" name="businessName" />
+        <input id="businessName" type="text" [(ngModel)]="signUpForm.businessName" name="businessName" placeholder="Your business name" />
       </div>
 
       <div class="two-col" *ngIf="showProviderFields">
-        <div>
+        <div class="field">
           <label for="category">Category</label>
           <select id="category" [(ngModel)]="signUpForm.category" name="category">
             <option value="plumber">Plumber</option>
@@ -76,32 +125,22 @@
             <option value="ambulance">Ambulance</option>
           </select>
         </div>
-        <div>
+        <div class="field">
           <label for="experienceYears">Experience (Years)</label>
           <input id="experienceYears" type="number" [(ngModel)]="signUpForm.experienceYears" name="experienceYears" min="1" />
         </div>
       </div>
 
-      <div *ngIf="showProviderFields">
+      <div class="field" *ngIf="showProviderFields">
         <label for="address">Address</label>
-        <input id="address" type="text" [(ngModel)]="signUpForm.address" name="address" />
+        <input id="address" type="text" [(ngModel)]="signUpForm.address" name="address" placeholder="Business address" />
       </div>
 
       <button type="submit" [disabled]="loading">{{ loading ? 'Creating account...' : 'Create account' }}</button>
     </form>
 
-    <div class="tab-row compact-tabs" *ngIf="mode === 'login'; else backToLogin">
-      <button type="button" class="mode-link" (click)="setMode('signup')">Need an account? Sign up</button>
-    </div>
-
-    <ng-template #backToLogin>
-      <div class="tab-row compact-tabs">
-        <button type="button" class="mode-link" (click)="setMode('login')">Already have an account? Sign in</button>
-      </div>
-    </ng-template>
-
-    <div class="tab-row compact-tabs helper-row" *ngIf="mode === 'login'">
-      <span class="helper-copy">Quick access for emergencies</span>
+    <div class="helper-row" *ngIf="mode === 'login'">
+      <span class="helper-copy">Quick access for emergency use without a full sign-up flow.</span>
     </div>
 
     <p class="status" *ngIf="statusMessage">{{ statusMessage }}</p>

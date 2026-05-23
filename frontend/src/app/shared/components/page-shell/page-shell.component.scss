@@ -1,15 +1,20 @@
 .page-shell {
-  background: var(--bg-panel);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(14px);
-  border-radius: 18px;
-  padding: 1.25rem 1.35rem;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78)),
+    radial-gradient(circle at top right, rgba(255, 138, 61, 0.12), transparent 24%);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius-xl);
+  padding: 1.4rem 1.45rem;
   box-shadow: var(--shadow-soft);
 }
 
 h2 {
   margin: 0;
-  font-size: clamp(1.5rem, 2.8vw, 2.15rem);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  letter-spacing: -0.03em;
 }
 
 p {
@@ -20,6 +25,53 @@ p {
 .page-shell-header {
   margin-bottom: 1.15rem;
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.shell-kicker {
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--brand-rose);
+}
+
+.shell-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(120, 142, 171, 0.14);
+}
+
+.shell-badge span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand-deep), var(--brand-vivid));
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.08);
+}
+
+.shell-badge span:nth-child(2) {
+  background: linear-gradient(135deg, var(--brand-warm), #ffc857);
+}
+
+.shell-badge span:nth-child(3) {
+  background: linear-gradient(135deg, var(--brand-rose), #ff8fab);
+}
+
+@media (max-width: 720px) {
+  .page-shell {
+    padding: 1.1rem;
+    border-radius: 22px;
+  }
+
+  .page-shell-header {
+    flex-direction: column;
+  }
 }

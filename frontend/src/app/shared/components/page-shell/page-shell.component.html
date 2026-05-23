@@ -1,7 +1,15 @@
 <section class="page-shell">
   <header class="page-shell-header">
-    <h2>{{ title }}</h2>
-    <p *ngIf="subtitle">{{ subtitle }}</p>
+    <div>
+      <p class="shell-kicker">Live workspace</p>
+      <h2>{{ title }}</h2>
+      <p *ngIf="subtitle">{{ subtitle }}</p>
+    </div>
+    <div class="shell-badge" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
   </header>
   <ng-content></ng-content>
 </section>
