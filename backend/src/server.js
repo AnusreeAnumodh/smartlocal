@@ -9,17 +9,40 @@ import authRoutes from './routes/auth.routes.js';
 import providerRoutes from './routes/provider.routes.js';
 import { connectDB } from './config/db.js';
 import { bootstrapServices } from './controllers/service.controller.js';
+import { bootstrapAuthData } from './controllers/auth.controller.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const ALLOW_START_WITHOUT_DB = process.env.ALLOW_START_WITHOUT_DB === 'true';
+const configuredOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedOrigins = new Set([
+  ...configuredOrigins,
+  'http://localhost:4200',
+  'http://127.0.0.1:4200',
+  'http://localhost:4201',
+  'http://127.0.0.1:4201'
+]);
 
 app.locals.dbConnected = false;
 app.locals.allowStartWithoutDb = ALLOW_START_WITHOUT_DB;
 
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    }
+  })
+);
 app.use(express.json());
 
 app.use('/api/health', healthRoutes);
@@ -47,6 +70,7 @@ app.get('/', (_req, res) => {
 async function startServer() {
   try {
     await connectDB();
+    await bootstrapAuthData();
     await bootstrapServices();
     app.locals.dbConnected = true;
   } catch (error) {

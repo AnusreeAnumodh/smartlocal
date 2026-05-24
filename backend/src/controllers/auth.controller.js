@@ -2,40 +2,68 @@ import { User } from '../models/user.model.js';
 import { Provider } from '../models/provider.model.js';
 import { Service } from '../models/service.model.js';
 
+const DEMO_USERS = [
+  {
+    fullName: 'Aarav Admin',
+    mobile: '+91-9000000100',
+    email: 'admin@smartlocal.app',
+    password: 'admin123',
+    role: 'admin',
+    accountType: 'individual'
+  },
+  {
+    fullName: 'Anjali Joseph',
+    mobile: '+91-9000000200',
+    email: 'anjali@smartlocal.app',
+    password: 'user123',
+    role: 'user',
+    accountType: 'community',
+    communityName: 'Kochi Residents Forum',
+    locality: 'Kochi'
+  },
+  {
+    fullName: 'Ravi Kumar',
+    mobile: '+91-9000000001',
+    email: 'ravi@smartlocal.app',
+    password: 'provider123',
+    role: 'provider',
+    accountType: 'individual'
+  }
+];
+
+const DEMO_PROVIDER = {
+  businessName: 'Ravi Plumbing Services',
+  ownerName: 'Ravi Kumar',
+  mobile: '+91-9000000001',
+  email: 'ravi@smartlocal.app',
+  category: 'plumber',
+  city: 'Ernakulam',
+  address: 'Marine Drive, Ernakulam',
+  availability: 'available',
+  experienceYears: 7,
+  verified: true,
+  rating: 4.8,
+  responseTimeMinutes: 5,
+  highResponseRate: true
+};
+
 function ensureAuthStore(app) {
   if (!app.locals.authStore) {
     app.locals.authStore = {
       users: [
         {
           id: 'user-demo-admin',
-          fullName: 'Aarav Admin',
-          mobile: '+91-9000000100',
-          email: 'admin@smartlocal.app',
-          password: 'admin123',
-          role: 'admin',
-          accountType: 'individual',
+          ...DEMO_USERS[0],
           createdAt: new Date().toISOString()
         },
         {
           id: 'user-demo-public',
-          fullName: 'Anjali Joseph',
-          mobile: '+91-9000000200',
-          email: 'anjali@smartlocal.app',
-          password: 'user123',
-          role: 'user',
-          accountType: 'community',
-          communityName: 'Kochi Residents Forum',
-          locality: 'Kochi',
+          ...DEMO_USERS[1],
           createdAt: new Date().toISOString()
         },
         {
           id: 'user-demo-provider',
-          fullName: 'Ravi Kumar',
-          mobile: '+91-9000000001',
-          email: 'ravi@smartlocal.app',
-          password: 'provider123',
-          role: 'provider',
-          accountType: 'individual',
+          ...DEMO_USERS[2],
           createdAt: new Date().toISOString()
         }
       ],
@@ -43,19 +71,7 @@ function ensureAuthStore(app) {
         {
           id: 'provider-demo-1',
           userId: 'user-demo-provider',
-          businessName: 'Ravi Plumbing Services',
-          ownerName: 'Ravi Kumar',
-          mobile: '+91-9000000001',
-          email: 'ravi@smartlocal.app',
-          category: 'plumber',
-          city: 'Ernakulam',
-          address: 'Marine Drive, Ernakulam',
-          availability: 'available',
-          experienceYears: 7,
-          verified: true,
-          rating: 4.8,
-          responseTimeMinutes: 5,
-          highResponseRate: true,
+          ...DEMO_PROVIDER,
           createdAt: new Date().toISOString()
         }
       ]
@@ -124,18 +140,61 @@ async function syncProviderService(provider) {
   await Service.create(basePayload);
 }
 
-export async function login(req, res) {
-  const { mobile, password } = req.body || {};
+export async function bootstrapAuthData() {
+  const adminUser = await User.findOneAndUpdate(
+    { mobile: DEMO_USERS[0].mobile },
+    { $setOnInsert: DEMO_USERS[0] },
+    { new: true, upsert: true }
+  );
 
-  if (!mobile || !password) {
-    return res.status(400).json({ message: 'mobile and password are required' });
+  await User.findOneAndUpdate(
+    { mobile: DEMO_USERS[1].mobile },
+    { $setOnInsert: DEMO_USERS[1] },
+    { new: true, upsert: true }
+  );
+
+  const providerUser = await User.findOneAndUpdate(
+    { mobile: DEMO_USERS[2].mobile },
+    { $setOnInsert: DEMO_USERS[2] },
+    { new: true, upsert: true }
+  );
+
+  if (!adminUser || !providerUser) {
+    return;
+  }
+
+  const provider = await Provider.findOneAndUpdate(
+    { mobile: DEMO_PROVIDER.mobile },
+    {
+      $setOnInsert: {
+        userId: providerUser._id,
+        ...DEMO_PROVIDER
+      }
+    },
+    { new: true, upsert: true }
+  );
+
+  await syncProviderService(provider);
+}
+
+export async function login(req, res) {
+  const { mobile, email, identifier, password } = req.body || {};
+  const normalizedIdentifier = String(identifier || mobile || email || '')
+    .trim()
+    .toLowerCase();
+
+  if (!normalizedIdentifier || !password) {
+    return res.status(400).json({ message: 'identifier and password are required' });
   }
 
   if (req.app.locals.dbConnected) {
-    const user = await User.findOne({ mobile, password }).lean();
+    const user = await User.findOne({
+      password,
+      $or: [{ mobile: normalizedIdentifier }, { email: normalizedIdentifier }]
+    }).lean();
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid mobile number or password' });
+      return res.status(401).json({ message: 'Invalid mobile, email, or password' });
     }
 
     const providerProfile = user.role === 'provider' ? await Provider.findOne({ userId: user._id }).lean() : null;
@@ -152,10 +211,14 @@ export async function login(req, res) {
   }
 
   const store = ensureAuthStore(req.app);
-  const user = store.users.find((entry) => entry.mobile === mobile && entry.password === password);
+  const user = store.users.find((entry) => {
+    const mobileMatch = entry.mobile.toLowerCase() === normalizedIdentifier;
+    const emailMatch = entry.email.toLowerCase() === normalizedIdentifier;
+    return (mobileMatch || emailMatch) && entry.password === password;
+  });
 
   if (!user) {
-    return res.status(401).json({ message: 'Invalid mobile number or password' });
+    return res.status(401).json({ message: 'Invalid mobile, email, or password' });
   }
 
   const providerProfile = user.role === 'provider' ? store.providers.find((entry) => entry.userId === user.id) ?? null : null;

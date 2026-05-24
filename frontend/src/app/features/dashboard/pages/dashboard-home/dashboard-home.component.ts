@@ -4,7 +4,6 @@ import { ServiceItem } from '../../models/service-item.model';
 import { ServiceRecommendation } from '../../models/service-recommendation.model';
 import { ProviderProfile } from '../../../auth/models/provider-profile.model';
 import { SessionService } from '../../../../core/services/session.service';
-import { AuthService } from '../../../auth/services/auth.service';
 import { DEMO_PROVIDERS, DEMO_SERVICES, KERALA_CITIES } from '../../../../shared/data/kerala-directory.data';
 import { CATEGORY_OFFERINGS, FRONTEND_DEFAULTS, SERVICE_CATEGORIES } from '../../../../shared/config/app-config';
 
@@ -40,8 +39,7 @@ export class DashboardHomeComponent implements OnInit {
 
   constructor(
     private localServices: LocalServicesService,
-    private sessionService: SessionService,
-    private authService: AuthService
+    private sessionService: SessionService
   ) {}
 
   ngOnInit(): void {
@@ -125,12 +123,7 @@ export class DashboardHomeComponent implements OnInit {
         this.providersLoading = false;
       },
       error: () => {
-        const localProviders = this.authService.getLocalProviders();
-        const mergedProviders = [...DEMO_PROVIDERS, ...localProviders].filter((provider, index, list) => {
-          return list.findIndex((entry) => entry.mobile === provider.mobile && entry.businessName === provider.businessName) === index;
-        });
-
-        this.providers = mergedProviders.filter((provider) => {
+        this.providers = DEMO_PROVIDERS.filter((provider) => {
           const categoryMatch = this.category ? provider.category === this.category : true;
           const cityMatch = this.city ? provider.city.toLowerCase() === this.city.toLowerCase() : true;
           return categoryMatch && cityMatch;
@@ -191,20 +184,7 @@ export class DashboardHomeComponent implements OnInit {
   private getDemoServices(): ServiceItem[] {
     const category = this.category.toLowerCase();
     const city = this.city.trim().toLowerCase();
-    const localProvidersAsServices = this.authService.getLocalProviders().map((provider) => ({
-      _id: provider.id,
-      category: provider.category,
-      name: provider.businessName,
-      phone: provider.mobile,
-      city: provider.city,
-      verified: provider.verified,
-      rating: provider.rating,
-      responseTimeMinutes: provider.responseTimeMinutes,
-      availability: provider.availability,
-      highResponseRate: provider.highResponseRate
-    }));
-
-    return [...DEMO_SERVICES, ...localProvidersAsServices].filter((service, index, list) => {
+    return [...DEMO_SERVICES].filter((service, index, list) => {
       const duplicateIndex = list.findIndex((entry) => entry.phone === service.phone && entry.name === service.name);
       if (duplicateIndex !== index) {
         return false;
