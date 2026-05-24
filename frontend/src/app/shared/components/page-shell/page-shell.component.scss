@@ -1,20 +1,16 @@
 .page-shell {
-  position: relative;
-  overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(18, 18, 22, 0.96), rgba(10, 10, 12, 0.92)),
-    radial-gradient(circle at top right, rgba(245, 158, 11, 0.1), transparent 24%);
+  background: var(--bg-panel-strong);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  border-radius: var(--radius-xl);
-  padding: 1.4rem 1.45rem;
+  border-radius: 18px;
+  padding: 1.5rem;
   box-shadow: var(--shadow-soft);
 }
 
 h2 {
   margin: 0;
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
-  letter-spacing: -0.03em;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  letter-spacing: -0.02em;
+  font-weight: 700;
 }
 
 p {
@@ -23,46 +19,19 @@ p {
 }
 
 .page-shell-header {
-  margin-bottom: 1.15rem;
+  margin-bottom: 1.5rem;
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
 }
 
 .shell-kicker {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   font-size: 0.75rem;
-  font-weight: 800;
-  color: var(--brand-rose);
-}
-
-.shell-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 0.8rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.shell-badge span {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #f59e0b, #a16207);
-  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.08);
-}
-
-.shell-badge span:nth-child(2) {
-  background: linear-gradient(135deg, #22c55e, #166534);
-}
-
-.shell-badge span:nth-child(3) {
-  background: linear-gradient(135deg, #e5e7eb, #71717a);
+  font-weight: 600;
+  color: var(--ink-soft);
 }
 
 @media (max-width: 720px) {

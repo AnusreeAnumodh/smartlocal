@@ -1,14 +1,7 @@
 <div class="layout">
-  <div class="layout-orb orb-a" aria-hidden="true"></div>
-  <div class="layout-orb orb-b" aria-hidden="true"></div>
-  <div class="layout-grid" aria-hidden="true"></div>
-
   <header class="topbar">
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true">
-        <span class="brand-ring"></span>
-        <span class="brand-core"></span>
-      </div>
+      <div class="brand-mark" aria-hidden="true"></div>
       <div>
         <p class="eyebrow">{{ appMeta.eyebrow }}</p>
         <h1>{{ appMeta.title }}</h1>
@@ -21,7 +14,7 @@
         <strong>{{ currentUserName }}</strong>
         <span class="session-role">{{ currentUserRole }}</span>
       </div>
-      <button *ngIf="isAuthenticated" (click)="logout()">Logout</button>
+      <button class="secondary-button" *ngIf="isAuthenticated" (click)="logout()">Logout</button>
     </div>
   </header>
 

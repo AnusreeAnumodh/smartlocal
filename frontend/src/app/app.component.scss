@@ -1,47 +1,6 @@
 .layout {
   min-height: 100vh;
-  position: relative;
-  overflow: hidden;
-  padding: 1.2rem 1rem 2rem;
-}
-
-.layout-orb,
-.layout-grid {
-  position: fixed;
-  pointer-events: none;
-}
-
-.layout-orb {
-  border-radius: 999px;
-  filter: blur(18px);
-  opacity: 0.75;
-  animation: drift 14s ease-in-out infinite;
-}
-
-.orb-a {
-  top: 92px;
-  left: -48px;
-  width: 240px;
-  height: 240px;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.22), rgba(245, 158, 11, 0));
-}
-
-.orb-b {
-  right: -62px;
-  bottom: 120px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
-  animation-delay: -6s;
-}
-
-.layout-grid {
-  inset: 0;
-  opacity: 0.16;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-  background-size: 42px 42px;
+  padding: 1.5rem 1rem 2rem;
 }
 
 .topbar {
@@ -54,86 +13,48 @@
   max-width: 1280px;
   position: relative;
   z-index: 1;
-  background: rgba(10, 10, 12, 0.82);
+  background: var(--bg-panel-strong);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  backdrop-filter: blur(18px);
+  border-radius: 18px;
   box-shadow: var(--shadow-soft);
   color: var(--ink-strong);
-  animation: rise-in 700ms ease both;
 
   .eyebrow {
     margin: 0;
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--brand-rose);
-    font-weight: 700;
+    color: var(--ink-soft);
+    font-weight: 600;
   }
 
   h1 {
     margin: 0.2rem 0 0;
-    font-size: clamp(1.12rem, 2vw, 1.4rem);
-    font-weight: 800;
-    color: var(--ink-strong);
-  }
-
-  button {
-    color: #ffffff;
-    background: linear-gradient(135deg, #f59e0b, #a16207);
-    border: 1px solid transparent;
-    border-radius: 999px;
-    padding: 0.6rem 1rem;
-    cursor: pointer;
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
     font-weight: 700;
-    box-shadow: 0 14px 28px rgba(15, 76, 129, 0.2);
+    color: var(--ink-strong);
   }
 }
 
 .brand {
   display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
+  align-items: center;
+  gap: 0.9rem;
 }
 
 .brand-mark {
-  position: relative;
-  width: 56px;
-  height: 56px;
+  width: 12px;
+  height: 12px;
   flex: 0 0 auto;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #151518, #26262b);
-  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.38);
-}
-
-.brand-ring,
-.brand-core {
-  position: absolute;
-  inset: 0;
-  margin: auto;
   border-radius: 999px;
-}
-
-.brand-ring {
-  width: 28px;
-  height: 22px;
-  border: 3px solid rgba(255, 255, 255, 0.95);
-  top: 7px;
-}
-
-.brand-core {
-  width: 16px;
-  height: 18px;
   background: var(--brand-warm);
-  bottom: 11px;
-  border-radius: 6px;
 }
 
 .brand-copy {
   margin: 0.3rem 0 0;
-  max-width: 540px;
+  max-width: 640px;
   color: var(--ink-soft);
-  font-size: 0.94rem;
+  font-size: 0.9rem;
 }
 
 .header-actions {
@@ -148,7 +69,7 @@
   align-items: flex-end;
   gap: 0.1rem;
   padding: 0.7rem 0.95rem;
-  border-radius: 18px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -160,8 +81,19 @@
 }
 
 .session-copy strong {
-  font-size: 0.98rem;
-  font-weight: 800;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.secondary-button {
+  color: var(--ink-strong);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.7rem 0.95rem;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: none;
 }
 
 .content {
@@ -170,8 +102,6 @@
   padding: 1.2rem 0 0;
   max-width: 1280px;
   margin: 0 auto;
-  animation: rise-in 820ms ease both;
-  animation-delay: 80ms;
 }
 
 @media (max-width: 720px) {
@@ -187,7 +117,7 @@
   }
 
   .topbar {
-    border-radius: 20px;
+    border-radius: 16px;
   }
 
   .session-copy {
@@ -197,28 +127,5 @@
 
   .content {
     padding-top: 0.25rem;
-  }
-}
-
-@keyframes drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(24px, -20px, 0) scale(1.06);
-  }
-}
-
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }

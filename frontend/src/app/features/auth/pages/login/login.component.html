@@ -3,22 +3,11 @@
     <p class="eyebrow">{{ appMeta.authEyebrow }}</p>
     <h1>{{ appMeta.authTitle }}</h1>
     <p class="muted intro-copy">{{ appMeta.authIntro }}</p>
-
-    <div class="showcase-grid">
-      <article class="showcase-card primary-card">
-        <span class="showcase-label">{{ appMeta.authPrimaryLabel }}</span>
-        <strong>{{ appMeta.authPrimaryTitle }}</strong>
-        <p>{{ appMeta.authPrimaryCopy }}</p>
-      </article>
-      <article class="showcase-card stat-card">
-        <span class="stat-value">{{ keralaCities.length }}</span>
-        <span class="stat-label">Kerala city presets</span>
-      </article>
-      <article class="showcase-card stat-card">
-        <span class="stat-value">{{ serviceCategories.length }}</span>
-        <span class="stat-label">core service categories</span>
-      </article>
-    </div>
+    <ul class="showcase-list">
+      <li>{{ keralaCities.length }} Kerala districts preloaded</li>
+      <li>{{ serviceCategories.length }} service categories available</li>
+      <li>Single account flow for users and providers</li>
+    </ul>
   </article>
 
   <article class="auth-card">
@@ -26,7 +15,7 @@
       <div>
         <p class="eyebrow">SmartLocal access</p>
         <h2>{{ mode === 'login' ? 'Sign in' : 'Create account' }}</h2>
-        <p class="muted">{{ mode === 'login' ? 'Pick up where you left off or continue as guest.' : 'Set up a user or provider account in a few quick steps.' }}</p>
+        <p class="muted">{{ mode === 'login' ? 'Use your saved mobile number or email to continue.' : 'Create a standard user or provider account.' }}</p>
       </div>
       <div class="mode-switch">
         <button type="button" [class.active]="mode === 'login'" (click)="setMode('login')">Login</button>
@@ -133,7 +122,7 @@
     </form>
 
     <div class="helper-row" *ngIf="mode === 'login'">
-      <span class="helper-copy">Quick access for emergency use without a full sign-up flow.</span>
+      <span class="helper-copy">Use guest mode only for quick browsing without saving account data.</span>
     </div>
 
     <p class="status" *ngIf="statusMessage">{{ statusMessage }}</p>
