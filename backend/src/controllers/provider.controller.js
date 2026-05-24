@@ -1,3 +1,5 @@
+import { Provider } from '../models/provider.model.js';
+
 function ensureAuthStore(app) {
   if (!app.locals.authStore) {
     app.locals.authStore = {
@@ -11,8 +13,8 @@ function ensureAuthStore(app) {
 
 function sanitizeProvider(provider) {
   return {
-    id: provider.id,
-    userId: provider.userId,
+    id: String(provider._id || provider.id),
+    userId: String(provider.userId),
     businessName: provider.businessName,
     ownerName: provider.ownerName,
     mobile: provider.mobile,
@@ -30,11 +32,26 @@ function sanitizeProvider(provider) {
   };
 }
 
-export function listProviders(req, res) {
-  const store = ensureAuthStore(req.app);
+export async function listProviders(req, res) {
   const { category, city } = req.query;
   const normalizedCategory = category ? String(category).toLowerCase() : '';
   const normalizedCity = city ? String(city).toLowerCase() : '';
+
+  if (req.app.locals.dbConnected) {
+    const query = {};
+    if (normalizedCategory) query.category = normalizedCategory;
+    if (normalizedCity) query.city = new RegExp(`^${String(city)}$`, 'i');
+
+    const data = (await Provider.find(query).sort({ verified: -1, createdAt: -1 }).lean()).map(sanitizeProvider);
+
+    return res.json({
+      count: data.length,
+      data,
+      source: 'database-session'
+    });
+  }
+
+  const store = ensureAuthStore(req.app);
 
   const data = store.providers
     .filter((provider) => {
@@ -48,6 +65,6 @@ export function listProviders(req, res) {
   return res.json({
     count: data.length,
     data,
-    source: req.app.locals.dbConnected ? 'database-session' : 'fallback-session'
+    source: 'fallback-session'
   });
 }

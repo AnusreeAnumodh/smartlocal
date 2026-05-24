@@ -1,3 +1,7 @@
+import { User } from '../models/user.model.js';
+import { Provider } from '../models/provider.model.js';
+import { Service } from '../models/service.model.js';
+
 function ensureAuthStore(app) {
   if (!app.locals.authStore) {
     app.locals.authStore = {
@@ -44,8 +48,8 @@ function ensureAuthStore(app) {
           mobile: '+91-9000000001',
           email: 'ravi@smartlocal.app',
           category: 'plumber',
-          city: 'Kochi',
-          address: 'Marine Drive, Kochi',
+          city: 'Ernakulam',
+          address: 'Marine Drive, Ernakulam',
           availability: 'available',
           experienceYears: 7,
           verified: true,
@@ -63,7 +67,7 @@ function ensureAuthStore(app) {
 
 function sanitizeUser(user) {
   return {
-    id: user.id,
+    id: String(user._id || user.id),
     fullName: user.fullName,
     mobile: user.mobile,
     email: user.email,
@@ -77,8 +81,8 @@ function sanitizeUser(user) {
 
 function sanitizeProvider(provider) {
   return {
-    id: provider.id,
-    userId: provider.userId,
+    id: String(provider._id || provider.id),
+    userId: String(provider.userId),
     businessName: provider.businessName,
     ownerName: provider.ownerName,
     mobile: provider.mobile,
@@ -96,11 +100,55 @@ function sanitizeProvider(provider) {
   };
 }
 
-export function login(req, res) {
+async function syncProviderService(provider) {
+  const basePayload = {
+    category: provider.category,
+    name: provider.businessName,
+    phone: provider.mobile,
+    city: provider.city,
+    verified: provider.verified,
+    rating: provider.rating,
+    responseTimeMinutes: provider.responseTimeMinutes,
+    availability: provider.availability,
+    highResponseRate: provider.highResponseRate
+  };
+
+  const existing = await Service.findOne({ phone: provider.mobile, name: provider.businessName });
+
+  if (existing) {
+    Object.assign(existing, basePayload);
+    await existing.save();
+    return;
+  }
+
+  await Service.create(basePayload);
+}
+
+export async function login(req, res) {
   const { mobile, password } = req.body || {};
 
   if (!mobile || !password) {
     return res.status(400).json({ message: 'mobile and password are required' });
+  }
+
+  if (req.app.locals.dbConnected) {
+    const user = await User.findOne({ mobile, password }).lean();
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid mobile number or password' });
+    }
+
+    const providerProfile = user.role === 'provider' ? await Provider.findOne({ userId: user._id }).lean() : null;
+
+    return res.json({
+      message: 'Login successful',
+      data: {
+        token: `smartlocal-${user.role}-${user._id}`,
+        user: sanitizeUser(user),
+        providerProfile: providerProfile ? sanitizeProvider(providerProfile) : null
+      },
+      source: 'database-session'
+    });
   }
 
   const store = ensureAuthStore(req.app);
@@ -119,7 +167,7 @@ export function login(req, res) {
       user: sanitizeUser(user),
       providerProfile: providerProfile ? sanitizeProvider(providerProfile) : null
     },
-    source: req.app.locals.dbConnected ? 'database-session' : 'fallback-session'
+    source: 'fallback-session'
   });
 }
 
@@ -131,7 +179,7 @@ export function registerAccount(req, res) {
   return registerUser(req, res);
 }
 
-export function registerProvider(req, res) {
+export async function registerProvider(req, res) {
   const {
     fullName,
     mobile,
@@ -147,6 +195,52 @@ export function registerProvider(req, res) {
   if (!fullName || !mobile || !password || !businessName || !category || !city) {
     return res.status(400).json({
       message: 'fullName, mobile, password, businessName, category, and city are required'
+    });
+  }
+
+  if (req.app.locals.dbConnected) {
+    const existingUser = await User.findOne({ mobile }).lean();
+
+    if (existingUser) {
+      return res.status(409).json({ message: 'A provider with this mobile number is already registered' });
+    }
+
+    const user = await User.create({
+      fullName,
+      mobile,
+      email: email || '',
+      password,
+      role: 'provider',
+      accountType: 'individual'
+    });
+
+    const provider = await Provider.create({
+      userId: user._id,
+      businessName,
+      ownerName: fullName,
+      mobile,
+      email: email || '',
+      category: String(category).toLowerCase(),
+      city,
+      address: address || '',
+      availability: 'available',
+      experienceYears: Number(experienceYears) || 1,
+      verified: false,
+      rating: 4.2,
+      responseTimeMinutes: 15,
+      highResponseRate: false
+    });
+
+    await syncProviderService(provider);
+
+    return res.status(201).json({
+      message: 'Provider registered successfully',
+      data: {
+        token: `smartlocal-provider-${user._id}`,
+        user: sanitizeUser(user),
+        providerProfile: sanitizeProvider(provider)
+      },
+      source: 'database-session'
     });
   }
 
@@ -200,16 +294,45 @@ export function registerProvider(req, res) {
       user: sanitizeUser(user),
       providerProfile: sanitizeProvider(provider)
     },
-    source: req.app.locals.dbConnected ? 'database-session' : 'fallback-session'
+    source: 'fallback-session'
   });
 }
 
-export function registerUser(req, res) {
+export async function registerUser(req, res) {
   const { fullName, mobile, email, password, city, accountType = 'individual', communityName = '', locality = '' } = req.body || {};
 
   if (!fullName || !mobile || !password || !city) {
     return res.status(400).json({
       message: 'fullName, mobile, password, and city are required'
+    });
+  }
+
+  if (req.app.locals.dbConnected) {
+    const existingUser = await User.findOne({ mobile }).lean();
+
+    if (existingUser) {
+      return res.status(409).json({ message: 'A user with this mobile number is already registered' });
+    }
+
+    const user = await User.create({
+      fullName,
+      mobile,
+      email: email || '',
+      password,
+      role: 'user',
+      accountType,
+      communityName: accountType === 'community' ? communityName || fullName : '',
+      locality: locality || city
+    });
+
+    return res.status(201).json({
+      message: 'User registered successfully',
+      data: {
+        token: `smartlocal-user-${user._id}`,
+        user: sanitizeUser(user),
+        providerProfile: null
+      },
+      source: 'database-session'
     });
   }
 
@@ -242,15 +365,30 @@ export function registerUser(req, res) {
       user: sanitizeUser(user),
       providerProfile: null
     },
-    source: req.app.locals.dbConnected ? 'database-session' : 'fallback-session'
+    source: 'fallback-session'
   });
 }
 
-export function resetPassword(req, res) {
+export async function resetPassword(req, res) {
   const { mobile, newPassword } = req.body || {};
 
   if (!mobile || !newPassword) {
     return res.status(400).json({ message: 'mobile and newPassword are required' });
+  }
+
+  if (req.app.locals.dbConnected) {
+    const user = await User.findOne({ mobile });
+
+    if (!user) {
+      return res.status(404).json({ message: 'No account found for this mobile number' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.json({
+      message: 'Password reset successful. You can login with the new password now.'
+    });
   }
 
   const store = ensureAuthStore(req.app);

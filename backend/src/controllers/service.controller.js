@@ -106,11 +106,11 @@ function filterServices(data, normalizedCategory, normalizedCity) {
   });
 }
 
-function getRegisteredProviderServices(app) {
+async function getRegisteredProviderServices(app) {
   const providers = app.locals.authStore?.providers ?? [];
 
   return providers.map((provider) => ({
-    _id: provider.id,
+    _id: String(provider._id || provider.id),
     category: provider.category,
     name: provider.businessName,
     phone: provider.mobile,
@@ -147,7 +147,7 @@ export async function listServices(req, res) {
     const { normalizedCategory, normalizedCity } = normalizeFilters(req.query);
     const isDbConnected = Boolean(req.app.locals.dbConnected);
     let data = [];
-    const registeredProviderServices = getRegisteredProviderServices(req.app);
+    const registeredProviderServices = await getRegisteredProviderServices(req.app);
 
     if (isDbConnected) {
       const query = {};
@@ -179,7 +179,7 @@ export async function recommendService(req, res) {
   try {
     const { normalizedCategory, normalizedCity } = normalizeFilters(req.query);
     const isDbConnected = Boolean(req.app.locals.dbConnected);
-    const registeredProviderServices = getRegisteredProviderServices(req.app);
+    const registeredProviderServices = await getRegisteredProviderServices(req.app);
     let services = [];
 
     if (isDbConnected) {
