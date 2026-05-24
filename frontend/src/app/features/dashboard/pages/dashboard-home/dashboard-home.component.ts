@@ -6,6 +6,7 @@ import { ProviderProfile } from '../../../auth/models/provider-profile.model';
 import { SessionService } from '../../../../core/services/session.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { DEMO_PROVIDERS, DEMO_SERVICES, KERALA_CITIES } from '../../../../shared/data/kerala-directory.data';
+import { CATEGORY_OFFERINGS, FRONTEND_DEFAULTS, SERVICE_CATEGORIES } from '../../../../shared/config/app-config';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -14,11 +15,12 @@ import { DEMO_PROVIDERS, DEMO_SERVICES, KERALA_CITIES } from '../../../../shared
 })
 export class DashboardHomeComponent implements OnInit {
   readonly cities = KERALA_CITIES;
+  readonly serviceCategories = SERVICE_CATEGORIES;
   backendStatus = 'Checking...';
   backendMode = '';
   isUsingDemoData = false;
-  category = 'plumber';
-  city = 'Ernakulam';
+  category = FRONTEND_DEFAULTS.category;
+  city = FRONTEND_DEFAULTS.city;
   providersLoading = false;
   servicesLoading = false;
   recommendationLoading = false;
@@ -327,17 +329,6 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   private getOfferingsForCategory(category: string): string[] {
-    switch (category) {
-      case 'plumber':
-        return ['Leak repair', 'Motor setup', 'Water tank maintenance'];
-      case 'electrician':
-        return ['Wiring check', 'Inverter support', 'Appliance installation'];
-      case 'medical_store':
-        return ['24x7 medicine support', 'Prescription pickup', 'Home delivery'];
-      case 'ambulance':
-        return ['Emergency pickup', 'Hospital transfer', 'Oxygen support'];
-      default:
-        return ['General local support'];
-    }
+    return CATEGORY_OFFERINGS[category] ?? ['General local support'];
   }
 }

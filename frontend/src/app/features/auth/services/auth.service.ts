@@ -13,6 +13,7 @@ import { UserRegistrationRequest } from '../models/user-registration-request.mod
 import { ResetPasswordRequest } from '../models/reset-password-request.model';
 import { SignUpRequest } from '../models/sign-up-request.model';
 import { DEMO_PROVIDERS } from '../../../shared/data/kerala-directory.data';
+import { FRONTEND_DEFAULTS } from '../../../shared/config/app-config';
 
 const LOCAL_PROVIDER_KEY = 'smartlocal_local_providers';
 const LOCAL_USER_KEY = 'smartlocal_local_users';
@@ -185,7 +186,7 @@ export class AuthService {
             email: payload.email,
             password: payload.password,
             businessName: payload.businessName || payload.fullName,
-            category: payload.category || 'plumber',
+            category: payload.category || FRONTEND_DEFAULTS.category,
             city: payload.city,
             address: payload.address || '',
             experienceYears: payload.experienceYears || 1

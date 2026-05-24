@@ -3,6 +3,7 @@ import { AuthService } from '../../services/auth.service';
 import { LoginRequest } from '../../models/login-request.model';
 import { SignUpRequest } from '../../models/sign-up-request.model';
 import { KERALA_CITIES } from '../../../../shared/data/kerala-directory.data';
+import { ACCOUNT_TYPE_OPTIONS, APP_META, FRONTEND_DEFAULTS, ROLE_OPTIONS, SERVICE_CATEGORIES } from '../../../../shared/config/app-config';
 
 @Component({
   selector: 'app-login',
@@ -10,7 +11,11 @@ import { KERALA_CITIES } from '../../../../shared/data/kerala-directory.data';
   styleUrl: './login.component.scss'
 })
 export class LoginComponent {
+  readonly appMeta = APP_META;
   readonly keralaCities = KERALA_CITIES;
+  readonly roleOptions = ROLE_OPTIONS;
+  readonly accountTypeOptions = ACCOUNT_TYPE_OPTIONS;
+  readonly serviceCategories = SERVICE_CATEGORIES;
 
   mode: 'login' | 'signup' = 'login';
   statusMessage = '';
@@ -28,10 +33,10 @@ export class LoginComponent {
     email: '',
     password: '',
     role: 'user',
-    city: 'Ernakulam',
+    city: FRONTEND_DEFAULTS.city,
     accountType: 'individual',
     businessName: '',
-    category: 'plumber',
+    category: FRONTEND_DEFAULTS.category,
     address: '',
     experienceYears: 1,
     communityName: '',

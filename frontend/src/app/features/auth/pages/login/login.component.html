@@ -1,23 +1,21 @@
 <section class="auth-shell">
   <article class="auth-showcase">
-    <p class="eyebrow">Connected local response</p>
-    <h1>Local help, faster and easier.</h1>
-    <p class="muted intro-copy">
-      Discover trusted providers, surface emergency options quickly, and switch between user and provider journeys without friction.
-    </p>
+    <p class="eyebrow">{{ appMeta.authEyebrow }}</p>
+    <h1>{{ appMeta.authTitle }}</h1>
+    <p class="muted intro-copy">{{ appMeta.authIntro }}</p>
 
     <div class="showcase-grid">
       <article class="showcase-card primary-card">
-        <span class="showcase-label">Live access</span>
-        <strong>24x7 emergency-first flow</strong>
-        <p>Designed for fast action on mobile, tablet, and desktop with clear touch targets and bold visual feedback.</p>
+        <span class="showcase-label">{{ appMeta.authPrimaryLabel }}</span>
+        <strong>{{ appMeta.authPrimaryTitle }}</strong>
+        <p>{{ appMeta.authPrimaryCopy }}</p>
       </article>
       <article class="showcase-card stat-card">
-        <span class="stat-value">10+</span>
+        <span class="stat-value">{{ keralaCities.length }}</span>
         <span class="stat-label">Kerala city presets</span>
       </article>
       <article class="showcase-card stat-card">
-        <span class="stat-value">4</span>
+        <span class="stat-value">{{ serviceCategories.length }}</span>
         <span class="stat-label">core service categories</span>
       </article>
     </div>
@@ -79,8 +77,7 @@
         <div class="field">
           <label for="signupRole">Account Type</label>
           <select id="signupRole" [(ngModel)]="signUpForm.role" name="signupRole">
-            <option value="user">User</option>
-            <option value="provider">Provider</option>
+            <option *ngFor="let role of roleOptions" [value]="role.value">{{ role.label }}</option>
           </select>
         </div>
         <div class="field">
@@ -95,8 +92,7 @@
         <div class="field">
           <label for="accountType">Profile Type</label>
           <select id="accountType" [(ngModel)]="signUpForm.accountType" name="accountType">
-            <option value="individual">Individual</option>
-            <option value="community">Community</option>
+            <option *ngFor="let accountType of accountTypeOptions" [value]="accountType.value">{{ accountType.label }}</option>
           </select>
         </div>
         <div class="field">
@@ -119,10 +115,7 @@
         <div class="field">
           <label for="category">Category</label>
           <select id="category" [(ngModel)]="signUpForm.category" name="category">
-            <option value="plumber">Plumber</option>
-            <option value="electrician">Electrician</option>
-            <option value="medical_store">Medical Store</option>
-            <option value="ambulance">Ambulance</option>
+            <option *ngFor="let category of serviceCategories" [value]="category.value">{{ category.label }}</option>
           </select>
         </div>
         <div class="field">

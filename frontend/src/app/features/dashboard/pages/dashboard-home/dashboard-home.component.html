@@ -64,10 +64,7 @@
         <label class="inline-field">
           <span>Category</span>
           <select [(ngModel)]="category">
-            <option value="plumber">Plumber</option>
-            <option value="electrician">Electrician</option>
-            <option value="medical_store">Medical Store</option>
-            <option value="ambulance">Ambulance</option>
+            <option *ngFor="let categoryOption of serviceCategories" [value]="categoryOption.value">{{ categoryOption.label }}</option>
           </select>
         </label>
         <label class="inline-field">
