@@ -39,6 +39,58 @@ export class LocalServicesService {
     return this.api.get(`/providers${suffix ? `?${suffix}` : ''}`);
   }
 
+  searchMarketplace(category: string, city: string, query?: string, lat?: number, lng?: number, radius?: number): Observable<{
+    data: Array<{
+      id: string;
+      source: string;
+      category: string;
+      categoryLabel: string;
+      name: string;
+      address: string;
+      city: string;
+      phone: string;
+      rating: number | null;
+      userRatingCount: number;
+      verified: boolean;
+      mapsUri: string;
+      websiteUri: string;
+      location: { latitude: number | null; longitude: number | null };
+      openNow: boolean | null;
+      businessStatus: string;
+    }>;
+    count: number;
+    source: string;
+    query: string;
+    location: { latitude: number | null; longitude: number | null };
+  }> {
+    const params = new URLSearchParams({ category, city });
+    if (query) params.append('query', query);
+    if (lat != null) params.append('lat', String(lat));
+    if (lng != null) params.append('lng', String(lng));
+    if (radius != null) params.append('radius', String(radius));
+    return this.api.get(`/marketplace/search?${params.toString()}`);
+  }
+
+  sendMarketplaceLead(payload: {
+    to: string;
+    providerName: string;
+    customerName: string;
+    customerPhone: string;
+    category: string;
+    city: string;
+  }): Observable<{ message: string; data: unknown; source: string }> {
+    return this.api.post('/marketplace/lead', payload);
+  }
+
+  createMarketplaceOrder(payload: {
+    amount: number;
+    currency?: string;
+    receipt: string;
+    notes?: Record<string, string>;
+  }): Observable<{ message: string; data: unknown; source: string }> {
+    return this.api.post('/marketplace/payments/order', payload);
+  }
+
   triggerSos(payload: SosAlertRequest): Observable<{ message: string }> {
     return this.api.post('/emergency/sos', payload);
   }

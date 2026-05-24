@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { LoginRequest } from '../../models/login-request.model';
 import { SignUpRequest } from '../../models/sign-up-request.model';
+import { KERALA_CITIES } from '../../../../shared/data/kerala-directory.data';
 
 @Component({
   selector: 'app-login',
@@ -9,18 +10,7 @@ import { SignUpRequest } from '../../models/sign-up-request.model';
   styleUrl: './login.component.scss'
 })
 export class LoginComponent {
-  readonly keralaCities = [
-    'Kochi',
-    'Thiruvananthapuram',
-    'Kozhikode',
-    'Thrissur',
-    'Kollam',
-    'Alappuzha',
-    'Kottayam',
-    'Kannur',
-    'Palakkad',
-    'Malappuram'
-  ];
+  readonly keralaCities = KERALA_CITIES;
 
   mode: 'login' | 'signup' = 'login';
   statusMessage = '';
@@ -38,7 +28,7 @@ export class LoginComponent {
     email: '',
     password: '',
     role: 'user',
-    city: 'Kochi',
+    city: 'Ernakulam',
     accountType: 'individual',
     businessName: '',
     category: 'plumber',

@@ -12,28 +12,15 @@ import { ProviderProfile } from '../models/provider-profile.model';
 import { UserRegistrationRequest } from '../models/user-registration-request.model';
 import { ResetPasswordRequest } from '../models/reset-password-request.model';
 import { SignUpRequest } from '../models/sign-up-request.model';
+import { DEMO_PROVIDERS } from '../../../shared/data/kerala-directory.data';
 
 const LOCAL_PROVIDER_KEY = 'smartlocal_local_providers';
 const LOCAL_USER_KEY = 'smartlocal_local_users';
-const LOCAL_DEMO_PROVIDER: ProviderProfile & { password: string } = {
-  id: 'local-demo-provider',
-  userId: 'local-demo-provider-user',
-  businessName: 'Ravi Plumbing Services',
-  ownerName: 'Ravi Kumar',
-  mobile: '+91-9000000001',
-  email: 'ravi@smartlocal.app',
-  category: 'plumber',
-  city: 'Kochi',
-  address: 'Marine Drive, Kochi',
-  availability: 'available',
-  experienceYears: 7,
-  verified: true,
-  rating: 4.8,
-  responseTimeMinutes: 5,
-  highResponseRate: true,
-  createdAt: new Date().toISOString(),
-  password: 'provider123'
-};
+const LOCAL_DEMO_PROVIDERS: Array<ProviderProfile & { password: string }> = DEMO_PROVIDERS.map((provider, index) => ({
+  ...provider,
+  password: index === 0 ? 'provider123' : `provider${String(index + 1).padStart(2, '0')}`
+}));
+const LOCAL_DEMO_PROVIDER = LOCAL_DEMO_PROVIDERS[0];
 const LOCAL_DEMO_USER = {
   id: 'local-demo-public-user',
   fullName: 'Anjali Joseph',
@@ -245,6 +232,14 @@ export class AuthService {
     );
   }
 
+  requestOtp(mobile: string, channel: 'sms' | 'whatsapp' | 'call' = 'sms'): Observable<{ message: string; data: unknown; source: string }> {
+    return this.api.post('/auth/otp/request', { mobile, channel });
+  }
+
+  verifyOtp(mobile: string, code: string): Observable<{ message: string; data: unknown; source: string }> {
+    return this.api.post('/auth/otp/verify', { mobile, code });
+  }
+
   logout(): void {
     this.sessionService.clearToken();
     this.router.navigate(['/auth/login']);
@@ -267,13 +262,13 @@ export class AuthService {
     const raw = storage.getItem(LOCAL_PROVIDER_KEY);
 
     if (!raw) {
-      return [LOCAL_DEMO_PROVIDER];
+      return LOCAL_DEMO_PROVIDERS;
     }
 
     try {
-      return [LOCAL_DEMO_PROVIDER, ...(JSON.parse(raw) as Array<ProviderProfile & { password?: string }>)];
+      return [...LOCAL_DEMO_PROVIDERS, ...(JSON.parse(raw) as Array<ProviderProfile & { password?: string }>)];
     } catch {
-      return [LOCAL_DEMO_PROVIDER];
+      return LOCAL_DEMO_PROVIDERS;
     }
   }
 

@@ -5,127 +5,7 @@ import { ServiceRecommendation } from '../../models/service-recommendation.model
 import { ProviderProfile } from '../../../auth/models/provider-profile.model';
 import { SessionService } from '../../../../core/services/session.service';
 import { AuthService } from '../../../auth/services/auth.service';
-
-const KERALA_CITIES = [
-  'Kochi',
-  'Thiruvananthapuram',
-  'Kozhikode',
-  'Thrissur',
-  'Kollam',
-  'Alappuzha',
-  'Kottayam',
-  'Kannur',
-  'Palakkad',
-  'Malappuram'
-];
-
-const DEMO_SERVICES: ServiceItem[] = [
-  {
-    _id: 'demo-1',
-    category: 'plumber',
-    name: 'Ravi Plumbing Services',
-    phone: '+91-9000000001',
-    city: 'Kochi',
-    verified: true,
-    rating: 4.8,
-    responseTimeMinutes: 5,
-    availability: 'available',
-    highResponseRate: true
-  },
-  {
-    _id: 'demo-2',
-    category: 'plumber',
-    name: 'Alappuzha Pipe Rescue',
-    phone: '+91-9000000005',
-    city: 'Alappuzha',
-    verified: true,
-    rating: 4.5,
-    responseTimeMinutes: 11,
-    availability: 'available',
-    highResponseRate: false
-  },
-  {
-    _id: 'demo-3',
-    category: 'electrician',
-    name: 'Trivandrum Power Care',
-    phone: '+91-9000000002',
-    city: 'Thiruvananthapuram',
-    verified: true,
-    rating: 4.7,
-    responseTimeMinutes: 9,
-    availability: 'busy',
-    highResponseRate: true
-  },
-  {
-    _id: 'demo-4',
-    category: 'medical_store',
-    name: 'Calicut LifeCare Pharmacy',
-    phone: '+91-9000000003',
-    city: 'Kozhikode',
-    verified: true,
-    rating: 4.6,
-    responseTimeMinutes: 6,
-    availability: 'available',
-    highResponseRate: true
-  },
-  {
-    _id: 'demo-5',
-    category: 'ambulance',
-    name: 'Thrissur Rapid Ambulance 24x7',
-    phone: '+91-9000000004',
-    city: 'Thrissur',
-    verified: true,
-    rating: 4.9,
-    responseTimeMinutes: 4,
-    availability: 'available',
-    highResponseRate: true
-  },
-  {
-    _id: 'demo-6',
-    category: 'medical_store',
-    name: 'Kottayam Health Hub',
-    phone: '+91-9000000007',
-    city: 'Kottayam',
-    verified: true,
-    rating: 4.4,
-    responseTimeMinutes: 8,
-    availability: 'available',
-    highResponseRate: true
-  },
-  {
-    _id: 'demo-7',
-    category: 'ambulance',
-    name: 'Kollam Emergency Link',
-    phone: '+91-9000000008',
-    city: 'Kollam',
-    verified: true,
-    rating: 4.7,
-    responseTimeMinutes: 7,
-    availability: 'available',
-    highResponseRate: true
-  }
-];
-
-const DEMO_PROVIDERS: ProviderProfile[] = [
-  {
-    id: 'provider-demo-1',
-    userId: 'user-demo-provider',
-    businessName: 'Ravi Plumbing Services',
-    ownerName: 'Ravi Kumar',
-    mobile: '+91-9000000001',
-    email: 'ravi@smartlocal.app',
-    category: 'plumber',
-    city: 'Kochi',
-    address: 'Marine Drive, Kochi',
-    availability: 'available',
-    experienceYears: 7,
-    verified: true,
-    rating: 4.8,
-    responseTimeMinutes: 5,
-    highResponseRate: true,
-    createdAt: new Date().toISOString()
-  }
-];
+import { DEMO_PROVIDERS, DEMO_SERVICES, KERALA_CITIES } from '../../../../shared/data/kerala-directory.data';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -138,7 +18,7 @@ export class DashboardHomeComponent implements OnInit {
   backendMode = '';
   isUsingDemoData = false;
   category = 'plumber';
-  city = 'Kochi';
+  city = 'Ernakulam';
   providersLoading = false;
   servicesLoading = false;
   recommendationLoading = false;
@@ -183,27 +63,52 @@ export class DashboardHomeComponent implements OnInit {
     });
 
     this.searchServices();
-    this.loadProviders();
   }
 
   searchServices(): void {
-    this.loadRecommendation();
-    this.loadProviders();
+    this.recommendationMessage = '';
+    this.providersLoading = true;
     this.servicesLoading = true;
+    this.recommendationLoading = true;
 
-    this.localServices.getServices(this.category, this.city).subscribe({
+    this.localServices.searchMarketplace(this.category, this.city).subscribe({
       next: (res) => {
-        this.services = res.data;
+        const liveProviders = res.data.map((provider) => this.mapMarketplaceProviderToProviderProfile(provider));
+        const liveServices = res.data.map((provider) => this.mapMarketplaceProviderToServiceItem(provider));
+
+        this.providers = liveProviders;
+        this.providersSource = res.source;
+        this.services = liveServices;
         this.servicesSource = res.source;
         this.servicesLoaded = true;
+        this.recommendation = this.buildRecommendationFromServices(liveServices);
+        this.recommendationSource = res.source;
+        this.recommendationMessage = liveServices.length ? 'Showing live marketplace results from Google Places.' : 'No live marketplace providers found for this filter.';
+        this.isUsingDemoData = false;
+        this.ensureSelectedProvider();
+        this.providersLoading = false;
         this.servicesLoading = false;
+        this.recommendationLoading = false;
       },
       error: () => {
-        this.services = this.getDemoServices();
-        this.servicesSource = 'frontend demo data';
-        this.servicesLoaded = true;
-        this.isUsingDemoData = true;
-        this.servicesLoading = false;
+        this.loadRecommendation();
+        this.loadProviders();
+
+        this.localServices.getServices(this.category, this.city).subscribe({
+          next: (fallbackRes) => {
+            this.services = fallbackRes.data;
+            this.servicesSource = fallbackRes.source;
+            this.servicesLoaded = true;
+            this.servicesLoading = false;
+          },
+          error: () => {
+            this.services = this.getDemoServices();
+            this.servicesSource = 'frontend demo data';
+            this.servicesLoaded = true;
+            this.isUsingDemoData = true;
+            this.servicesLoading = false;
+          }
+        });
       }
     });
   }
@@ -310,7 +215,11 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   private buildDemoRecommendation(): ServiceRecommendation | null {
-    const ranked = [...this.getDemoServices()].sort((left, right) => this.scoreService(right) - this.scoreService(left));
+    return this.buildRecommendationFromServices(this.getDemoServices());
+  }
+
+  private buildRecommendationFromServices(services: ServiceItem[]): ServiceRecommendation | null {
+    const ranked = [...services].sort((left, right) => this.scoreService(right) - this.scoreService(left));
     const provider = ranked[0];
 
     if (!provider || provider.rating == null || provider.responseTimeMinutes == null || provider.availability == null) {
@@ -334,6 +243,64 @@ export class DashboardHomeComponent implements OnInit {
         verified: provider.verified,
         highResponseRate: Boolean(provider.highResponseRate)
       }
+    };
+  }
+
+  private mapMarketplaceProviderToProviderProfile(provider: {
+    id: string;
+    category: string;
+    name: string;
+    address: string;
+    city: string;
+    phone: string;
+    rating: number | null;
+    verified: boolean;
+    openNow: boolean | null;
+    businessStatus: string;
+  }): ProviderProfile {
+    const createdAt = new Date().toISOString();
+
+    return {
+      id: provider.id,
+      userId: provider.id,
+      businessName: provider.name,
+      ownerName: provider.name,
+      mobile: provider.phone || 'Not shared',
+      email: '',
+      category: provider.category,
+      city: provider.city || this.city,
+      address: provider.address || provider.city || this.city,
+      availability: provider.openNow === false ? 'busy' : 'available',
+      experienceYears: 1,
+      verified: provider.verified,
+      rating: provider.rating ?? 4.2,
+      responseTimeMinutes: provider.openNow === false ? 18 : 10,
+      highResponseRate: (provider.rating ?? 0) >= 4.4,
+      createdAt
+    };
+  }
+
+  private mapMarketplaceProviderToServiceItem(provider: {
+    id: string;
+    category: string;
+    name: string;
+    city: string;
+    phone: string;
+    rating: number | null;
+    verified: boolean;
+    openNow: boolean | null;
+  }): ServiceItem {
+    return {
+      _id: provider.id,
+      category: provider.category,
+      name: provider.name,
+      phone: provider.phone || 'Not shared',
+      city: provider.city || this.city,
+      verified: provider.verified,
+      rating: provider.rating ?? 4.2,
+      responseTimeMinutes: provider.openNow === false ? 18 : 10,
+      availability: provider.openNow === false ? 'busy' : 'available',
+      highResponseRate: (provider.rating ?? 0) >= 4.4
     };
   }
 
