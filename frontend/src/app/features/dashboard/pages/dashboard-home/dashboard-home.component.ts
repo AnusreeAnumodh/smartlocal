@@ -172,6 +172,59 @@ export class DashboardHomeComponent implements OnInit {
     return this.providers.find((provider) => provider.id === this.selectedProviderId) ?? this.providers[0] ?? null;
   }
 
+  get verifiedProvidersCount(): number {
+    return this.providers.filter((provider) => provider.verified).length;
+  }
+
+  get availableProvidersCount(): number {
+    return this.providers.filter((provider) => provider.availability === 'available').length;
+  }
+
+  get averageProviderRating(): string {
+    if (!this.providers.length) {
+      return '0.0';
+    }
+
+    const total = this.providers.reduce((sum, provider) => sum + (provider.rating || 0), 0);
+    return (total / this.providers.length).toFixed(1);
+  }
+
+  get fastestResponseMinutes(): number | null {
+    if (!this.providers.length) {
+      return null;
+    }
+
+    return this.providers.reduce((fastest, provider) => {
+      return Math.min(fastest, provider.responseTimeMinutes || fastest);
+    }, this.providers[0].responseTimeMinutes || 0);
+  }
+
+  get selectedProviderScore(): number {
+    const provider = this.selectedProvider;
+
+    if (!provider) {
+      return 0;
+    }
+
+    return Math.round(provider.rating * 20 + (provider.verified ? 8 : 0) + (provider.availability === 'available' ? 4 : 0));
+  }
+
+  get providerCompletionScore(): number {
+    if (!this.providerProfile) {
+      return 0;
+    }
+
+    const fields = [
+      this.providerProfile.businessName,
+      this.providerProfile.mobile,
+      this.providerProfile.city,
+      this.providerProfile.address,
+      this.providerProfile.email
+    ];
+    const completed = fields.filter((field) => Boolean(field && field.trim())).length;
+    return Math.round((completed / fields.length) * 100);
+  }
+
   get providerOfferings(): string[] {
     const provider = this.selectedProvider;
     return provider ? this.getOfferingsForCategory(provider.category) : [];
@@ -179,6 +232,19 @@ export class DashboardHomeComponent implements OnInit {
 
   get providerAudienceOfferings(): string[] {
     return this.providerProfile ? this.getOfferingsForCategory(this.providerProfile.category) : [];
+  }
+
+  get availabilityAccent(): string {
+    const availability = this.selectedProvider?.availability ?? this.providerProfile?.availability;
+
+    switch (availability) {
+      case 'available':
+        return 'available';
+      case 'busy':
+        return 'busy';
+      default:
+        return 'pending';
+    }
   }
 
   private getDemoServices(): ServiceItem[] {

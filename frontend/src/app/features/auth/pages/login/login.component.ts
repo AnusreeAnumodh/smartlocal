@@ -3,7 +3,7 @@ import { AuthService } from '../../services/auth.service';
 import { LoginRequest } from '../../models/login-request.model';
 import { SignUpRequest } from '../../models/sign-up-request.model';
 import { KERALA_CITIES } from '../../../../shared/data/kerala-directory.data';
-import { ACCOUNT_TYPE_OPTIONS, APP_META, FRONTEND_DEFAULTS, ROLE_OPTIONS, SERVICE_CATEGORIES } from '../../../../shared/config/app-config';
+import { ACCOUNT_TYPE_OPTIONS, FRONTEND_DEFAULTS, ROLE_OPTIONS, SERVICE_CATEGORIES } from '../../../../shared/config/app-config';
 
 @Component({
   selector: 'app-login',
@@ -11,7 +11,6 @@ import { ACCOUNT_TYPE_OPTIONS, APP_META, FRONTEND_DEFAULTS, ROLE_OPTIONS, SERVIC
   styleUrl: './login.component.scss'
 })
 export class LoginComponent {
-  readonly appMeta = APP_META;
   readonly keralaCities = KERALA_CITIES;
   readonly roleOptions = ROLE_OPTIONS;
   readonly accountTypeOptions = ACCOUNT_TYPE_OPTIONS;

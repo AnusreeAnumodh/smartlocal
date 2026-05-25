@@ -19,14 +19,19 @@
       <p>{{ city }} {{ category | capitalize }} options loaded for comparison.</p>
     </article>
     <article class="spotlight-card cool-card">
-      <span class="spotlight-label">AI recommendation</span>
-      <strong>{{ recommendation ? recommendation.provider.name : 'Updating...' }}</strong>
-      <p>{{ recommendation ? recommendation.reason : 'Best-fit provider is being recalculated.' }}</p>
+      <span class="spotlight-label">Verified now</span>
+      <strong>{{ verifiedProvidersCount }}</strong>
+      <p>Trusted listings with visible verification for faster decision making.</p>
     </article>
     <article class="spotlight-card mint-card">
-      <span class="spotlight-label">Live mode</span>
-      <strong>{{ isUsingDemoData ? 'Demo fallback' : 'Backend connected' }}</strong>
-      <p>{{ providersSource || 'Provider source will appear after search.' }}</p>
+      <span class="spotlight-label">Fastest response</span>
+      <strong>{{ fastestResponseMinutes ?? 0 }} mins</strong>
+      <p>Quickest available provider in the current search set.</p>
+    </article>
+    <article class="spotlight-card lilac-card">
+      <span class="spotlight-label">Average rating</span>
+      <strong>{{ averageProviderRating }} ★</strong>
+      <p>Quality snapshot across all providers loaded for this filter.</p>
     </article>
   </section>
 
@@ -47,54 +52,77 @@
         <strong>{{ provider.responseTimeMinutes }} mins</strong>
         <p>Fast response positioning helps you surface higher in intent-heavy searches.</p>
       </article>
+      <article class="spotlight-card lilac-card">
+        <span class="spotlight-label">Profile completion</span>
+        <strong>{{ providerCompletionScore }}%</strong>
+        <p>Complete business details improve trust and clarity in local discovery.</p>
+      </article>
     </section>
   </ng-container>
 
   <ng-container *ngIf="isUserView; else providerDashboard">
-    <section class="panel search-panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Find providers</p>
-          <h3>Search by service and city</h3>
+    <section class="dashboard-grid">
+      <article class="panel search-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Find providers</p>
+            <h3>Search by service and city</h3>
+          </div>
+          <p class="muted" *ngIf="providersSource">Source: {{ providersSource }}</p>
         </div>
-        <p class="muted" *ngIf="providersSource">Source: {{ providersSource }}</p>
-      </div>
 
-      <div class="row compact-row filter-row">
-        <label class="inline-field">
-          <span>Category</span>
-          <select [(ngModel)]="category">
-            <option *ngFor="let categoryOption of serviceCategories" [value]="categoryOption.value">{{ categoryOption.label }}</option>
-          </select>
-        </label>
-        <label class="inline-field">
-          <span>City</span>
-          <select [(ngModel)]="city">
-            <option *ngFor="let cityOption of cities" [value]="cityOption">{{ cityOption }}</option>
-          </select>
-        </label>
-        <button type="button" (click)="searchServices()">Update results</button>
-      </div>
-      <div class="loader-line" *ngIf="providersLoading || servicesLoading || recommendationLoading">
-        <span></span>
-      </div>
-    </section>
-
-    <section class="panel recommendation-panel" *ngIf="recommendation as item">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Recommended</p>
-          <h3>{{ item.provider.name }}</h3>
+        <div class="row compact-row filter-row">
+          <label class="inline-field">
+            <span>Category</span>
+            <select [(ngModel)]="category">
+              <option *ngFor="let categoryOption of serviceCategories" [value]="categoryOption.value">{{ categoryOption.label }}</option>
+            </select>
+          </label>
+          <label class="inline-field">
+            <span>City</span>
+            <select [(ngModel)]="city">
+              <option *ngFor="let cityOption of cities" [value]="cityOption">{{ cityOption }}</option>
+            </select>
+          </label>
+          <button type="button" (click)="searchServices()">Update results</button>
         </div>
-        <span class="status-pill">{{ item.scoreBreakdown.rating }} ★</span>
-      </div>
-      <p class="muted">{{ item.reason }}</p>
-      <div class="meta-grid">
-        <p><strong>City:</strong> {{ item.provider.city }}</p>
-        <p><strong>Response time:</strong> {{ item.scoreBreakdown.responseTimeMinutes }} mins</p>
-        <p><strong>Status:</strong> {{ item.scoreBreakdown.availability | capitalize }}</p>
-        <p><strong>Contact:</strong> {{ item.provider.phone }}</p>
-      </div>
+
+        <div class="micro-stats">
+          <article class="micro-stat">
+            <span>Available now</span>
+            <strong>{{ availableProvidersCount }}</strong>
+          </article>
+          <article class="micro-stat">
+            <span>Verified</span>
+            <strong>{{ verifiedProvidersCount }}</strong>
+          </article>
+          <article class="micro-stat">
+            <span>Rating avg</span>
+            <strong>{{ averageProviderRating }} ★</strong>
+          </article>
+        </div>
+
+        <div class="loader-line" *ngIf="providersLoading || servicesLoading || recommendationLoading">
+          <span></span>
+        </div>
+      </article>
+
+      <section class="panel recommendation-panel" *ngIf="recommendation as item">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Recommended</p>
+            <h3>{{ item.provider.name }}</h3>
+          </div>
+          <span class="status-pill">{{ item.scoreBreakdown.rating }} ★</span>
+        </div>
+        <p class="muted">{{ item.reason }}</p>
+        <div class="meta-grid">
+          <p><strong>City:</strong> {{ item.provider.city }}</p>
+          <p><strong>Response time:</strong> {{ item.scoreBreakdown.responseTimeMinutes }} mins</p>
+          <p><strong>Status:</strong> {{ item.scoreBreakdown.availability | capitalize }}</p>
+          <p><strong>Contact:</strong> {{ item.provider.phone }}</p>
+        </div>
+      </section>
     </section>
     <p class="muted recommendation-copy" *ngIf="recommendationLoading">Updating recommendation...</p>
 
@@ -142,6 +170,23 @@
           <span class="verify-pill" [class.unverified]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
         </div>
 
+        <div class="detail-widgets">
+          <article class="detail-widget">
+            <span>Score</span>
+            <strong>{{ selectedProviderScore }}</strong>
+          </article>
+          <article class="detail-widget">
+            <span>Status</span>
+            <strong class="availability-copy" [class.available]="availabilityAccent === 'available'" [class.busy]="availabilityAccent === 'busy'">
+              {{ provider.availability | capitalize }}
+            </strong>
+          </article>
+          <article class="detail-widget">
+            <span>Response</span>
+            <strong>{{ provider.responseTimeMinutes }} mins</strong>
+          </article>
+        </div>
+
         <div class="detail-grid">
           <p><strong>Owner:</strong> {{ provider.ownerName }}</p>
           <p><strong>Phone:</strong> {{ provider.mobile }}</p>
@@ -170,6 +215,23 @@
             <h3>{{ provider.businessName }}</h3>
           </div>
           <span class="verify-pill" [class.unverified]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
+        </div>
+
+        <div class="detail-widgets">
+          <article class="detail-widget">
+            <span>Profile</span>
+            <strong>{{ providerCompletionScore }}%</strong>
+          </article>
+          <article class="detail-widget">
+            <span>Rating</span>
+            <strong>{{ provider.rating }} ★</strong>
+          </article>
+          <article class="detail-widget">
+            <span>Status</span>
+            <strong class="availability-copy" [class.available]="provider.availability === 'available'" [class.busy]="provider.availability === 'busy'">
+              {{ provider.availability | capitalize }}
+            </strong>
+          </article>
         </div>
 
         <div class="detail-grid">

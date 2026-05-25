@@ -32,6 +32,10 @@ export class AppComponent {
     return this.isAuthenticated && this.currentUserRole !== 'guest';
   }
 
+  get showHeader(): boolean {
+    return this.isAuthenticated;
+  }
+
   logout(): void {
     this.authService.logout();
   }

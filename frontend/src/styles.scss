@@ -1,24 +1,24 @@
 :root {
-  --bg-base: #111113;
-  --bg-panel: #16161a;
-  --bg-panel-strong: #18181c;
-  --ink-strong: #f3f4f6;
-  --ink-soft: #a1a1aa;
-  --line-soft: rgba(255, 255, 255, 0.12);
-  --brand-deep: #18181c;
-  --brand-vivid: #27272a;
-  --brand-warm: #f3f4f6;
-  --brand-rose: #f3f4f6;
-  --brand-mint: #22c55e;
-  --brand-pale: #111113;
+  --bg-base: #0a1020;
+  --bg-panel: rgba(13, 20, 39, 0.74);
+  --bg-panel-strong: rgba(15, 24, 45, 0.88);
+  --ink-strong: #f5f7ff;
+  --ink-soft: #9fb0cd;
+  --line-soft: rgba(130, 156, 196, 0.2);
+  --brand-deep: #112f56;
+  --brand-vivid: #1fb6ff;
+  --brand-warm: #ff9650;
+  --brand-rose: #ff5f8f;
+  --brand-mint: #2ed8a3;
+  --brand-pale: #16233e;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.22);
-  --shadow-card: 0 8px 20px rgba(0, 0, 0, 0.18);
-  --radius-xl: 18px;
-  --radius-lg: 16px;
-  --radius-md: 10px;
+  --shadow-soft: 0 24px 60px rgba(3, 8, 19, 0.42);
+  --shadow-card: 0 18px 38px rgba(8, 16, 34, 0.38);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 14px;
 }
 
 html,
@@ -34,6 +34,11 @@ body {
 
 body {
   min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(31, 182, 255, 0.24), transparent 24%),
+    radial-gradient(circle at top right, rgba(255, 95, 143, 0.18), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(46, 216, 163, 0.16), transparent 26%),
+    linear-gradient(180deg, #09101f 0%, #0b1326 42%, #0f1730 100%);
 }
 
 * {
@@ -54,20 +59,20 @@ textarea {
 }
 
 button:hover:not(:disabled) {
-  transform: none;
-  box-shadow: none;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(8, 16, 34, 0.34);
 }
 
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(245, 158, 11, 0.22);
+  outline: 3px solid rgba(14, 165, 233, 0.28);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: rgba(245, 158, 11, 0.25);
+  background: rgba(14, 165, 233, 0.2);
 }
 
 @media (prefers-reduced-motion: reduce) {
