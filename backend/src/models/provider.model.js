@@ -14,6 +14,7 @@ const providerSchema = new mongoose.Schema(
     experienceYears: { type: Number, default: 1 },
     verified: { type: Boolean, default: false },
     rating: { type: Number, default: 4.2 },
+    reviewCount: { type: Number, default: 0 },
     responseTimeMinutes: { type: Number, default: 15 },
     highResponseRate: { type: Boolean, default: false }
   },

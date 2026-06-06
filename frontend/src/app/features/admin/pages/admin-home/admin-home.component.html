@@ -1,0 +1,114 @@
+<app-page-shell title="Admin Console" subtitle="Provider trust, review monitoring, and emergency dispatch visibility in one place.">
+  <section class="admin-hero">
+    <div>
+      <p class="eyebrow">Operations</p>
+      <h3>Moderate provider quality and emergency flow</h3>
+      <p class="muted">Use this console to verify providers, monitor new reviews, and move SOS alerts through dispatch.</p>
+    </div>
+    <div class="hero-note">
+      <span *ngIf="source">Source: {{ source }}</span>
+      <button type="button" (click)="loadOverview()">Refresh</button>
+    </div>
+  </section>
+
+  <p class="status-copy" *ngIf="statusMessage">{{ statusMessage }}</p>
+  <p class="error-copy" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="muted" *ngIf="loading">Loading admin overview...</p>
+
+  <ng-container *ngIf="overview as data">
+    <section class="metrics-grid">
+      <article class="metric-card">
+        <span>Total providers</span>
+        <strong>{{ data.metrics.providerCount }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Verified providers</span>
+        <strong>{{ data.metrics.verifiedProviderCount }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Pending providers</span>
+        <strong>{{ data.metrics.pendingProviderCount }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Open SOS alerts</span>
+        <strong>{{ data.metrics.openSosCount }}</strong>
+      </article>
+    </section>
+
+    <section class="admin-grid">
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Provider verification</p>
+            <h3>Approve or hold listings</h3>
+          </div>
+        </div>
+
+        <div class="provider-table">
+          <article class="provider-row" *ngFor="let provider of data.providers; trackBy: trackProvider">
+            <div>
+              <strong>{{ provider.businessName }}</strong>
+              <p>{{ provider.category | capitalize }} · {{ provider.city }}</p>
+              <app-star-rating [rating]="provider.rating" [showValue]="true" [reviewCount]="provider.reviewCount"></app-star-rating>
+            </div>
+            <div class="row-actions">
+              <span class="verify-pill" [class.unverified]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
+              <button type="button" (click)="setProviderVerification(provider, !provider.verified)">
+                {{ provider.verified ? 'Mark pending' : 'Verify' }}
+              </button>
+            </div>
+          </article>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Emergency queue</p>
+            <h3>Live SOS alerts</h3>
+          </div>
+        </div>
+
+        <div class="alert-stack">
+          <article class="alert-card" *ngFor="let alert of data.alerts; trackBy: trackAlert">
+            <div class="alert-head">
+              <div>
+                <strong>{{ alert.userName }}</strong>
+                <p>{{ alert.city || 'Location pending' }} · {{ alert.emergencyType | capitalize }}</p>
+              </div>
+              <span class="priority-pill" [class.high]="alert.priority === 'high'" [class.medium]="alert.priority === 'medium'">
+                {{ alert.priority | uppercase }}
+              </span>
+            </div>
+            <p class="muted">{{ alert.description || 'No extra incident description shared.' }}</p>
+            <p class="muted">Dispatch to: {{ alert.assignedProviderCategory | capitalize }}</p>
+            <div class="action-row">
+              <button type="button" (click)="setAlertStatus(alert, 'dispatching')">Dispatching</button>
+              <button type="button" (click)="setAlertStatus(alert, 'resolved')">Resolve</button>
+            </div>
+          </article>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel reviews-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Recent reviews</p>
+          <h3>Latest user feedback</h3>
+        </div>
+      </div>
+
+      <div class="review-list">
+        <article class="review-card" *ngFor="let review of data.reviews; trackBy: trackReview">
+          <div class="review-head">
+            <strong>{{ review.userName }}</strong>
+            <app-star-rating [rating]="review.rating" [showValue]="true"></app-star-rating>
+          </div>
+          <p>{{ review.comment || 'No written review added.' }}</p>
+          <small>{{ review.createdAt | date: 'medium' }}</small>
+        </article>
+      </div>
+    </section>
+  </ng-container>
+</app-page-shell>

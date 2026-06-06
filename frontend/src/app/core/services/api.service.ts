@@ -16,4 +16,8 @@ export class ApiService {
   post<T>(endpoint: string, payload: unknown): Observable<T> {
     return this.http.post<T>(`${this.baseUrl}${endpoint}`, payload);
   }
+
+  patch<T>(endpoint: string, payload: unknown): Observable<T> {
+    return this.http.patch<T>(`${this.baseUrl}${endpoint}`, payload);
+  }
 }

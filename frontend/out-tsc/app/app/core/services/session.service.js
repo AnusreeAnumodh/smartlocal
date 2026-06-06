@@ -22,6 +22,27 @@ export class SessionService {
     get isAuthenticated() {
         return Boolean(this.token);
     }
+    get currentRole() {
+        return this.session?.user.role ?? 'guest';
+    }
+    get approvalStatus() {
+        return this.session?.user.approvalStatus ?? 'approved';
+    }
+    hasRole(...roles) {
+        return roles.includes(this.currentRole);
+    }
+    get isSuperAdmin() {
+        return this.hasRole('super_admin');
+    }
+    get isAdmin() {
+        return this.hasRole('admin', 'super_admin');
+    }
+    get isProvider() {
+        return this.hasRole('provider');
+    }
+    get isStandardUser() {
+        return this.hasRole('user', 'guest', 'visitor');
+    }
     setSession(session) {
         storage.setItem(SESSION_KEY, JSON.stringify(session));
         storage.setItem(TOKEN_KEY, session.token);

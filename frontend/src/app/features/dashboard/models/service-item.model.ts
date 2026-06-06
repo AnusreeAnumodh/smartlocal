@@ -6,6 +6,7 @@ export interface ServiceItem {
   city: string;
   verified: boolean;
   rating?: number;
+  reviewCount?: number;
   responseTimeMinutes?: number;
   availability?: string;
   highResponseRate?: boolean;

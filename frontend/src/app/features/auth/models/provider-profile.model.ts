@@ -12,6 +12,7 @@ export interface ProviderProfile {
   experienceYears: number;
   verified: boolean;
   rating: number;
+  reviewCount: number;
   responseTimeMinutes: number;
   highResponseRate: boolean;
   createdAt: string;

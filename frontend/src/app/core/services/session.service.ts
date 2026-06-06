@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { storage } from '../../utilities/storage.util';
-import { UserSession } from '../../models/user-session.model';
+import { ApprovalStatus, UserRole, UserSession } from '../../models/user-session.model';
 
 const TOKEN_KEY = 'smartlocal_auth_token';
 const SESSION_KEY = 'smartlocal_user_session';
@@ -27,6 +27,34 @@ export class SessionService {
 
   get isAuthenticated(): boolean {
     return Boolean(this.token);
+  }
+
+  get currentRole(): UserRole {
+    return this.session?.user.role ?? 'guest';
+  }
+
+  get approvalStatus(): ApprovalStatus {
+    return this.session?.user.approvalStatus ?? 'approved';
+  }
+
+  hasRole(...roles: UserRole[]): boolean {
+    return roles.includes(this.currentRole);
+  }
+
+  get isSuperAdmin(): boolean {
+    return this.hasRole('super_admin');
+  }
+
+  get isAdmin(): boolean {
+    return this.hasRole('admin', 'super_admin');
+  }
+
+  get isProvider(): boolean {
+    return this.hasRole('provider');
+  }
+
+  get isStandardUser(): boolean {
+    return this.hasRole('user', 'guest', 'visitor');
   }
 
   setSession(session: UserSession): void {

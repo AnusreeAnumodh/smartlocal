@@ -7,6 +7,7 @@ import emergencyRoutes from './routes/emergency.routes.js';
 import smartLockRoutes from './routes/smart-lock.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import providerRoutes from './routes/provider.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import { connectDB } from './config/db.js';
 import { bootstrapServices } from './controllers/service.controller.js';
 import { bootstrapAuthData } from './controllers/auth.controller.js';
@@ -49,6 +50,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/providers', providerRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/smart-lock', smartLockRoutes);
 

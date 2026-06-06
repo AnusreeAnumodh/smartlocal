@@ -19,6 +19,11 @@
   --radius-xl: 28px;
   --radius-lg: 22px;
   --radius-md: 14px;
+  --control-height: 48px;
+  --control-padding-x: 1rem;
+  --control-padding-y: 0.8rem;
+  --copy-tight: 1.25;
+  --copy-normal: 1.55;
 }
 
 html,
@@ -30,6 +35,7 @@ body {
   color: var(--ink-strong);
   font-weight: 500;
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -39,6 +45,11 @@ body {
     radial-gradient(circle at top right, rgba(255, 95, 143, 0.18), transparent 24%),
     radial-gradient(circle at bottom right, rgba(46, 216, 163, 0.16), transparent 26%),
     linear-gradient(180deg, #09101f 0%, #0b1326 42%, #0f1730 100%);
+  line-height: var(--copy-normal);
+}
+
+html {
+  scroll-padding-top: 6.5rem;
 }
 
 * {
@@ -49,18 +60,96 @@ button,
 input,
 select,
 textarea {
+  font: inherit;
   transition:
     transform 180ms ease,
     box-shadow 220ms ease,
     border-color 180ms ease,
     background-color 180ms ease,
-    opacity 180ms ease;
+    opacity 180ms ease,
+    filter 180ms ease;
   border-radius: var(--radius-md);
+}
+
+button {
+  min-height: var(--control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: var(--control-padding-y) var(--control-padding-x);
+  line-height: 1.1;
+}
+
+input,
+select,
+textarea {
+  min-height: var(--control-height);
+  padding: var(--control-padding-y) var(--control-padding-x);
+  line-height: 1.35;
+}
+
+textarea {
+  min-height: 120px;
 }
 
 button:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 14px 28px rgba(8, 16, 34, 0.34);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: var(--copy-tight);
+}
+
+p,
+li,
+label,
+small,
+span {
+  line-height: var(--copy-normal);
+}
+
+.fade-up {
+  animation: fade-up 420ms ease both;
+}
+
+.stagger-1 {
+  animation-delay: 80ms;
+}
+
+.stagger-2 {
+  animation-delay: 150ms;
+}
+
+.stagger-3 {
+  animation-delay: 220ms;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 button:focus-visible,

@@ -37,6 +37,8 @@ export class AuthService {
         mobile: '',
         email: '',
         role: 'guest',
+        approvalStatus: 'approved',
+        isActive: true,
         createdAt: new Date().toISOString()
       },
       providerProfile: null

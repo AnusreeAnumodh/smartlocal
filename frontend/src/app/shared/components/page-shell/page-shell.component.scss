@@ -3,9 +3,12 @@
     linear-gradient(180deg, rgba(15, 24, 45, 0.9), rgba(14, 22, 40, 0.92));
   border: 1px solid rgba(154, 177, 214, 0.16);
   border-radius: 30px;
+  width: 100%;
+  overflow: hidden;
   padding: 1.6rem;
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(20px);
+  animation: fade-up 320ms ease both;
 }
 
 h2 {
@@ -23,8 +26,60 @@ p {
 .page-shell-header {
   margin-bottom: 1.5rem;
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(154, 177, 214, 0.12);
+}
+
+.page-shell-copy {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 720px;
+}
+
+.page-shell-copy p {
+  line-height: 1.5;
+}
+
+.page-shell-actions,
+.page-shell-nav {
+  display: flex;
+  align-items: center;
+}
+
+.page-shell-actions {
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.page-shell-nav {
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.page-shell-nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 177, 214, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink-strong);
+  text-decoration: none;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.1;
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+}
+
+.page-shell-nav a.active {
+  background: linear-gradient(135deg, var(--brand-deep), var(--brand-vivid));
+  border-color: transparent;
+  color: #ffffff;
 }
 
 .shell-kicker {
@@ -34,6 +89,7 @@ p {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--brand-rose);
+  line-height: 1.2;
 }
 
 @media (max-width: 720px) {
@@ -44,5 +100,12 @@ p {
 
   .page-shell-header {
     flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: 0.85rem;
+  }
+
+  .page-shell-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }

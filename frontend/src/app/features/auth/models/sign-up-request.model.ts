@@ -3,7 +3,7 @@ export interface SignUpRequest {
   mobile: string;
   email: string;
   password: string;
-  role: 'user' | 'provider';
+  role: 'user' | 'provider' | 'admin';
   city: string;
   category?: string;
   businessName?: string;

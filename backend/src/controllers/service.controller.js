@@ -116,10 +116,11 @@ async function getRegisteredProviderServices(app) {
     phone: provider.mobile,
     city: provider.city,
     verified: provider.verified,
-    rating: provider.rating,
-    responseTimeMinutes: provider.responseTimeMinutes,
-    availability: provider.availability,
-    highResponseRate: provider.highResponseRate
+      rating: provider.rating,
+      reviewCount: provider.reviewCount ?? 0,
+      responseTimeMinutes: provider.responseTimeMinutes,
+      availability: provider.availability,
+      highResponseRate: provider.highResponseRate
   }));
 }
 

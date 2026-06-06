@@ -8,6 +8,11 @@ import { SmartLockActionRequest } from '../models/smart-lock-action-request.mode
 import { ServiceRecommendation } from '../models/service-recommendation.model';
 import { EmergencyAnalysis } from '../models/emergency-analysis.model';
 import { ProviderProfile } from '../../auth/models/provider-profile.model';
+import { ProviderReview } from '../models/provider-review.model';
+import { AdminOverview } from '../../admin/models/admin-overview.model';
+import { AdminUser } from '../../admin/models/admin-user.model';
+import { SosAlert } from '../models/sos-alert.model';
+import { ApprovalStatus, UserRole } from '../../../models/user-session.model';
 
 @Injectable({ providedIn: 'root' })
 export class LocalServicesService {
@@ -95,8 +100,8 @@ export class LocalServicesService {
     return this.api.post('/emergency/sos', payload);
   }
 
-  analyzeEmergency(query: string): Observable<{ data: EmergencyAnalysis }> {
-    return this.api.post('/emergency/analyze', { query });
+  analyzeEmergency(query: string, emergencyType: string): Observable<{ data: EmergencyAnalysis }> {
+    return this.api.post('/emergency/analyze', { query, emergencyType });
   }
 
   getSmartLockOverview(): Observable<{ data: SmartLockOverview; source: string }> {
@@ -105,5 +110,36 @@ export class LocalServicesService {
 
   updateSmartLock(payload: SmartLockActionRequest): Observable<{ message: string; data: SmartLockOverview }> {
     return this.api.post('/smart-lock/action', payload);
+  }
+
+  getProviderReviews(providerId: string): Observable<{ data: ProviderReview[]; count: number; source: string }> {
+    return this.api.get(`/providers/${providerId}/reviews`);
+  }
+
+  createProviderReview(
+    providerId: string,
+    payload: { userId: string; userName: string; rating: number; comment: string }
+  ): Observable<{ message: string; data: { review: ProviderReview; provider: ProviderProfile }; source: string }> {
+    return this.api.post(`/providers/${providerId}/reviews`, payload);
+  }
+
+  getAdminOverview(): Observable<{ data: AdminOverview; source: string }> {
+    return this.api.get('/admin/overview');
+  }
+
+  updateProviderVerification(providerId: string, verified: boolean): Observable<{ message: string; data: ProviderProfile }> {
+    return this.api.patch(`/admin/providers/${providerId}/verification`, { verified });
+  }
+
+  updateUserApprovalStatus(userId: string, approvalStatus: ApprovalStatus): Observable<{ message: string; data: AdminUser }> {
+    return this.api.patch(`/admin/users/${userId}/approval-status`, { approvalStatus });
+  }
+
+  updateUserRole(userId: string, role: Exclude<UserRole, 'guest' | 'visitor'>): Observable<{ message: string; data: AdminUser }> {
+    return this.api.patch(`/admin/users/${userId}/role`, { role });
+  }
+
+  updateSosStatus(alertId: string, status: SosAlert['status']): Observable<{ message: string; data: SosAlert }> {
+    return this.api.patch(`/admin/sos-alerts/${alertId}/status`, { status });
   }
 }

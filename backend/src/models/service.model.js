@@ -8,6 +8,7 @@ const serviceSchema = new mongoose.Schema(
     city: { type: String, required: true, trim: true },
     verified: { type: Boolean, default: false },
     rating: { type: Number, default: 4.2 },
+    reviewCount: { type: Number, default: 0 },
     responseTimeMinutes: { type: Number, default: 15 },
     availability: { type: String, default: 'available' },
     highResponseRate: { type: Boolean, default: false }

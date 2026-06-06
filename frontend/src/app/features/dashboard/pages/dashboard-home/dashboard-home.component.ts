@@ -6,6 +6,19 @@ import { ProviderProfile } from '../../../auth/models/provider-profile.model';
 import { SessionService } from '../../../../core/services/session.service';
 import { DEMO_PROVIDERS, DEMO_SERVICES, KERALA_CITIES } from '../../../../shared/data/kerala-directory.data';
 import { CATEGORY_OFFERINGS, FRONTEND_DEFAULTS, SERVICE_CATEGORIES } from '../../../../shared/config/app-config';
+import { EmergencyAnalysis } from '../../models/emergency-analysis.model';
+import { SosAlertRequest } from '../../models/sos-alert-request.model';
+import { AdminOverview } from '../../../admin/models/admin-overview.model';
+import { AdminUser } from '../../../admin/models/admin-user.model';
+import { SosAlert } from '../../models/sos-alert.model';
+import { ApprovalStatus, UserRole } from '../../../../models/user-session.model';
+
+const CITY_COORDINATES: Record<string, { latitude: number; longitude: number }> = {
+  Ernakulam: { latitude: 9.9816, longitude: 76.2999 },
+  Kochi: { latitude: 9.9312, longitude: 76.2673 },
+  Thrissur: { latitude: 10.5276, longitude: 76.2144 },
+  Kozhikode: { latitude: 11.2588, longitude: 75.7804 }
+};
 
 @Component({
   selector: 'app-dashboard-home',
@@ -15,6 +28,21 @@ import { CATEGORY_OFFERINGS, FRONTEND_DEFAULTS, SERVICE_CATEGORIES } from '../..
 export class DashboardHomeComponent implements OnInit {
   readonly cities = KERALA_CITIES;
   readonly serviceCategories = SERVICE_CATEGORIES;
+  readonly manageableRoles: Array<{ value: 'user' | 'provider' | 'admin' | 'super_admin'; label: string }> = [
+    { value: 'user', label: 'User' },
+    { value: 'provider', label: 'Provider' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'super_admin', label: 'Super Admin' }
+  ];
+  readonly sosPresets = [
+    'Severe chest pain and trouble breathing',
+    'Water leak near electrical panel',
+    'Need urgent medicine delivery for senior citizen',
+    'Vehicle accident with possible injury'
+  ];
+
+  activeUserTab: 'discover' | 'providers' | 'feedback' | 'sos' | 'admin' = 'discover';
+  activeProviderTab: 'overview' | 'visibility' = 'overview';
   backendStatus = 'Checking...';
   backendMode = '';
   isUsingDemoData = false;
@@ -23,6 +51,8 @@ export class DashboardHomeComponent implements OnInit {
   providersLoading = false;
   servicesLoading = false;
   recommendationLoading = false;
+  emergencyLoading = false;
+  sosLoading = false;
   services: ServiceItem[] = [];
   servicesSource = '';
   servicesLoaded = false;
@@ -31,11 +61,30 @@ export class DashboardHomeComponent implements OnInit {
   recommendationMessage = '';
   currentUserName = '';
   currentUserRole = '';
+  currentUserId = '';
+  currentUserPhone = '';
   currentProviderBusiness = '';
   selectedProviderId = '';
   providers: ProviderProfile[] = [];
   providersSource = '';
   providerProfile: ProviderProfile | null = null;
+  reviewStatusMessage = '';
+  reviewErrorMessage = '';
+  reviewForm = {
+    rating: 5,
+    comment: ''
+  };
+  emergencyQuery = '';
+  emergencyType = 'ambulance';
+  emergencyAnalysis: EmergencyAnalysis | null = null;
+  emergencyStatusMessage = '';
+  emergencyErrorMessage = '';
+  sosStatusMessage = '';
+  sosErrorMessage = '';
+  adminOverview: AdminOverview | null = null;
+  adminLoading = false;
+  adminStatusMessage = '';
+  adminErrorMessage = '';
 
   constructor(
     private localServices: LocalServicesService,
@@ -44,7 +93,9 @@ export class DashboardHomeComponent implements OnInit {
 
   ngOnInit(): void {
     const session = this.sessionService.session;
+    this.currentUserId = session?.user.id ?? `guest-${Date.now()}`;
     this.currentUserName = session?.user.fullName ?? 'Guest User';
+    this.currentUserPhone = session?.user.mobile ?? '';
     this.currentUserRole = session?.user.role ?? 'visitor';
     this.currentProviderBusiness = session?.providerProfile?.businessName ?? '';
     this.providerProfile = session?.providerProfile ?? null;
@@ -63,6 +114,10 @@ export class DashboardHomeComponent implements OnInit {
     });
 
     this.searchServices();
+
+    if (this.isSuperAdminView) {
+      this.loadAdminOverview();
+    }
   }
 
   searchServices(): void {
@@ -160,12 +215,225 @@ export class DashboardHomeComponent implements OnInit {
     this.selectedProviderId = providerId;
   }
 
+  submitReview(): void {
+    const provider = this.selectedProvider;
+    this.reviewStatusMessage = '';
+    this.reviewErrorMessage = '';
+
+    if (!provider) {
+      this.reviewErrorMessage = 'Select a provider before submitting a review.';
+      return;
+    }
+
+    this.localServices
+      .createProviderReview(provider.id, {
+        userId: this.currentUserId,
+        userName: this.currentUserName,
+        rating: this.reviewForm.rating,
+        comment: this.reviewForm.comment.trim()
+      })
+      .subscribe({
+        next: (response) => {
+          this.reviewStatusMessage = response.message;
+          this.providers = this.providers.map((entry) => (entry.id === provider.id ? response.data.provider : entry));
+          this.reviewForm = { rating: 5, comment: '' };
+        },
+        error: (error: Error) => {
+          this.reviewErrorMessage = error.message || 'Unable to submit review';
+        }
+      });
+  }
+
+  analyzeEmergency(): void {
+    this.emergencyStatusMessage = '';
+    this.emergencyErrorMessage = '';
+    this.sosStatusMessage = '';
+    this.sosErrorMessage = '';
+
+    if (!this.emergencyQuery.trim()) {
+      this.emergencyErrorMessage = 'Describe the emergency first.';
+      return;
+    }
+
+    this.emergencyLoading = true;
+    this.localServices.analyzeEmergency(this.emergencyQuery.trim(), this.emergencyType).subscribe({
+      next: (response) => {
+        this.emergencyAnalysis = response.data;
+        this.emergencyStatusMessage = response.data.assistantMessage;
+        this.emergencyLoading = false;
+      },
+      error: (error: Error) => {
+        this.emergencyErrorMessage = error.message || 'Unable to analyze this emergency';
+        this.emergencyLoading = false;
+      }
+    });
+  }
+
+  sendSosAlert(): void {
+    this.sosStatusMessage = '';
+    this.sosErrorMessage = '';
+
+    if (!this.emergencyQuery.trim()) {
+      this.sosErrorMessage = 'Describe the emergency before sending SOS.';
+      return;
+    }
+
+    const coords = CITY_COORDINATES[this.city] ?? CITY_COORDINATES['Ernakulam'];
+    const payload: SosAlertRequest = {
+      userId: this.currentUserId,
+      userName: this.currentUserName,
+      phone: this.currentUserPhone || 'N/A',
+      city: this.city,
+      emergencyType: this.emergencyType,
+      description: this.emergencyQuery.trim(),
+      latitude: coords.latitude,
+      longitude: coords.longitude
+    };
+
+    this.sosLoading = true;
+    this.localServices.triggerSos(payload).subscribe({
+      next: (response) => {
+        this.sosStatusMessage = response.message;
+        this.sosLoading = false;
+      },
+      error: (error: Error) => {
+        this.sosErrorMessage = error.message || 'Unable to trigger SOS';
+        this.sosLoading = false;
+      }
+    });
+  }
+
+  loadAdminOverview(): void {
+    if (!this.isSuperAdminView) {
+      return;
+    }
+
+    this.adminLoading = true;
+    this.adminErrorMessage = '';
+
+    this.localServices.getAdminOverview().subscribe({
+      next: (response) => {
+        this.adminOverview = response.data;
+        this.adminLoading = false;
+      },
+      error: (error: Error) => {
+        this.adminErrorMessage = error.message || 'Unable to load super admin data';
+        this.adminLoading = false;
+      }
+    });
+  }
+
+  updateUserApprovalStatus(user: AdminUser, approvalStatus: ApprovalStatus): void {
+    this.adminStatusMessage = '';
+    this.adminErrorMessage = '';
+
+    this.localServices.updateUserApprovalStatus(user.id, approvalStatus).subscribe({
+      next: (response) => {
+        this.adminStatusMessage = response.message;
+        this.syncAdminUser(response.data);
+      },
+      error: (error: Error) => {
+        this.adminErrorMessage = error.message || 'Unable to update user status';
+      }
+    });
+  }
+
+  updateUserRole(user: AdminUser, role: string): void {
+    if (!['user', 'provider', 'admin', 'super_admin'].includes(role)) {
+      return;
+    }
+
+    this.adminStatusMessage = '';
+    this.adminErrorMessage = '';
+
+    this.localServices.updateUserRole(user.id, role as 'user' | 'provider' | 'admin' | 'super_admin').subscribe({
+      next: (response) => {
+        this.adminStatusMessage = response.message;
+        this.syncAdminUser(response.data);
+      },
+      error: (error: Error) => {
+        this.adminErrorMessage = error.message || 'Unable to update user role';
+      }
+    });
+  }
+
+  setProviderVerification(provider: ProviderProfile, verified: boolean): void {
+    this.adminStatusMessage = '';
+    this.adminErrorMessage = '';
+
+    this.localServices.updateProviderVerification(provider.id, verified).subscribe({
+      next: (response) => {
+        this.adminStatusMessage = response.message;
+        if (this.adminOverview) {
+          this.adminOverview.providers = this.adminOverview.providers.map((entry) => (entry.id === provider.id ? response.data : entry));
+          this.refreshAdminMetrics();
+        }
+      },
+      error: (error: Error) => {
+        this.adminErrorMessage = error.message || 'Unable to update provider status';
+      }
+    });
+  }
+
+  setAlertStatus(alert: SosAlert, status: SosAlert['status']): void {
+    this.adminStatusMessage = '';
+    this.adminErrorMessage = '';
+
+    this.localServices.updateSosStatus(alert.id, status).subscribe({
+      next: (response) => {
+        this.adminStatusMessage = response.message;
+        if (this.adminOverview) {
+          this.adminOverview.alerts = this.adminOverview.alerts.map((entry) => (entry.id === alert.id ? response.data : entry));
+          this.refreshAdminMetrics();
+        }
+      },
+      error: (error: Error) => {
+        this.adminErrorMessage = error.message || 'Unable to update SOS status';
+      }
+    });
+  }
+
+  applySosPreset(preset: string): void {
+    this.emergencyQuery = preset;
+  }
+
+  refreshDashboard(): void {
+    this.searchServices();
+    if (this.isSuperAdminView) {
+      this.loadAdminOverview();
+    }
+  }
+
   get isProviderView(): boolean {
-    return this.currentUserRole === 'provider';
+    return this.sessionService.isProvider;
+  }
+
+  get isSuperAdminView(): boolean {
+    return this.sessionService.isSuperAdmin;
+  }
+
+  get isAdminView(): boolean {
+    return this.sessionService.isAdmin;
   }
 
   get isUserView(): boolean {
-    return this.currentUserRole === 'user' || this.currentUserRole === 'guest' || this.currentUserRole === 'visitor' || this.currentUserRole === 'admin';
+    return !this.isProviderView;
+  }
+
+  get topServices(): ServiceItem[] {
+    return [...this.services].sort((left, right) => this.scoreService(right) - this.scoreService(left)).slice(0, 4);
+  }
+
+  get pendingProvidersCount(): number {
+    return this.adminOverview?.metrics.pendingProviderCount ?? 0;
+  }
+
+  get pendingUsersCount(): number {
+    return this.adminOverview?.metrics.pendingUserCount ?? 0;
+  }
+
+  get openSosCount(): number {
+    return this.adminOverview?.metrics.openSosCount ?? 0;
   }
 
   get selectedProvider(): ProviderProfile | null {
@@ -194,9 +462,7 @@ export class DashboardHomeComponent implements OnInit {
       return null;
     }
 
-    return this.providers.reduce((fastest, provider) => {
-      return Math.min(fastest, provider.responseTimeMinutes || fastest);
-    }, this.providers[0].responseTimeMinutes || 0);
+    return this.providers.reduce((fastest, provider) => Math.min(fastest, provider.responseTimeMinutes || fastest), this.providers[0].responseTimeMinutes || 0);
   }
 
   get selectedProviderScore(): number {
@@ -245,6 +511,18 @@ export class DashboardHomeComponent implements OnInit {
       default:
         return 'pending';
     }
+  }
+
+  setUserTab(tab: 'discover' | 'providers' | 'feedback' | 'sos' | 'admin'): void {
+    this.activeUserTab = tab;
+
+    if (tab === 'admin' && this.isSuperAdminView && !this.adminOverview && !this.adminLoading) {
+      this.loadAdminOverview();
+    }
+  }
+
+  setProviderTab(tab: 'overview' | 'visibility'): void {
+    this.activeProviderTab = tab;
   }
 
   private getDemoServices(): ServiceItem[] {
@@ -302,6 +580,7 @@ export class DashboardHomeComponent implements OnInit {
     city: string;
     phone: string;
     rating: number | null;
+    userRatingCount: number;
     verified: boolean;
     openNow: boolean | null;
     businessStatus: string;
@@ -322,6 +601,7 @@ export class DashboardHomeComponent implements OnInit {
       experienceYears: 1,
       verified: provider.verified,
       rating: provider.rating ?? 4.2,
+      reviewCount: provider.userRatingCount ?? 0,
       responseTimeMinutes: provider.openNow === false ? 18 : 10,
       highResponseRate: (provider.rating ?? 0) >= 4.4,
       createdAt
@@ -335,6 +615,7 @@ export class DashboardHomeComponent implements OnInit {
     city: string;
     phone: string;
     rating: number | null;
+    userRatingCount: number;
     verified: boolean;
     openNow: boolean | null;
   }): ServiceItem {
@@ -346,6 +627,7 @@ export class DashboardHomeComponent implements OnInit {
       city: provider.city || this.city,
       verified: provider.verified,
       rating: provider.rating ?? 4.2,
+      reviewCount: provider.userRatingCount ?? 0,
       responseTimeMinutes: provider.openNow === false ? 18 : 10,
       availability: provider.openNow === false ? 'busy' : 'available',
       highResponseRate: (provider.rating ?? 0) >= 4.4
@@ -376,5 +658,36 @@ export class DashboardHomeComponent implements OnInit {
 
   private getOfferingsForCategory(category: string): string[] {
     return CATEGORY_OFFERINGS[category] ?? ['General local support'];
+  }
+
+  private syncAdminUser(user: AdminUser): void {
+    if (!this.adminOverview) {
+      return;
+    }
+
+    this.adminOverview.users = this.adminOverview.users.map((entry) => (entry.id === user.id ? user : entry));
+    this.refreshAdminMetrics();
+  }
+
+  private refreshAdminMetrics(): void {
+    if (!this.adminOverview) {
+      return;
+    }
+
+    const users = this.adminOverview.users;
+    const providers = this.adminOverview.providers;
+    const alerts = this.adminOverview.alerts;
+    const reviews = this.adminOverview.reviews;
+
+    this.adminOverview.metrics = {
+      userCount: users.length,
+      activeUserCount: users.filter((user) => user.isActive && user.approvalStatus !== 'suspended').length,
+      pendingUserCount: users.filter((user) => user.approvalStatus === 'pending').length,
+      providerCount: providers.length,
+      verifiedProviderCount: providers.filter((provider) => provider.verified).length,
+      pendingProviderCount: providers.filter((provider) => !provider.verified).length,
+      reviewCount: reviews.length,
+      openSosCount: alerts.filter((alert) => ['queued', 'dispatching'].includes(alert.status)).length
+    };
   }
 }

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
+import { RoleGuard } from './core/guards/role.guard';
 import * as i0 from "@angular/core";
 import * as i1 from "@angular/router";
 const routes = [
@@ -12,6 +13,12 @@ const routes = [
         path: 'dashboard',
         canActivate: [AuthGuard],
         loadChildren: () => import('./features/dashboard/dashboard.module').then((m) => m.DashboardModule)
+    },
+    {
+        path: 'admin',
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: ['super_admin'] },
+        loadChildren: () => import('./features/admin/admin.module').then((m) => m.AdminModule)
     },
     { path: '', pathMatch: 'full', redirectTo: 'auth/login' },
     { path: '**', redirectTo: 'auth/login' }

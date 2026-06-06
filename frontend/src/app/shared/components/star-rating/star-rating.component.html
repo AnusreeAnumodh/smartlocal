@@ -1,0 +1,20 @@
+<div class="rating-shell" [class.interactive]="interactive">
+  <div class="star-row" [attr.aria-label]="'Rating ' + displayRating + ' out of ' + max">
+    <button
+      type="button"
+      class="star-button"
+      *ngFor="let star of stars"
+      [disabled]="!interactive"
+      [attr.aria-label]="'Set rating to ' + (star + 1) + ' out of ' + max"
+      (click)="setRating(star + 1)"
+    >
+      <span class="star-base">★</span>
+      <span class="star-fill" [style.width]="fillWidth(star)">★</span>
+    </button>
+  </div>
+
+  <div class="rating-meta" *ngIf="showValue || reviewCount !== null">
+    <strong *ngIf="showValue">{{ displayRating }}</strong>
+    <span *ngIf="reviewCount !== null">{{ reviewLabel }}</span>
+  </div>
+</div>

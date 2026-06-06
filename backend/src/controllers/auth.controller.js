@@ -1,14 +1,27 @@
 import { User } from '../models/user.model.js';
 import { Provider } from '../models/provider.model.js';
 import { Service } from '../models/service.model.js';
+import { ensureFallbackStore } from '../utils/fallback-store.js';
 
 const DEMO_USERS = [
+  {
+    fullName: 'Sana Super Admin',
+    mobile: '+91-9000000009',
+    email: 'superadmin@smartlocal.app',
+    password: 'super123',
+    role: 'super_admin',
+    approvalStatus: 'approved',
+    isActive: true,
+    accountType: 'individual'
+  },
   {
     fullName: 'Aarav Admin',
     mobile: '+91-9000000100',
     email: 'admin@smartlocal.app',
     password: 'admin123',
     role: 'admin',
+    approvalStatus: 'approved',
+    isActive: true,
     accountType: 'individual'
   },
   {
@@ -17,6 +30,8 @@ const DEMO_USERS = [
     email: 'anjali@smartlocal.app',
     password: 'user123',
     role: 'user',
+    approvalStatus: 'approved',
+    isActive: true,
     accountType: 'community',
     communityName: 'Kochi Residents Forum',
     locality: 'Kochi'
@@ -27,6 +42,8 @@ const DEMO_USERS = [
     email: 'ravi@smartlocal.app',
     password: 'provider123',
     role: 'provider',
+    approvalStatus: 'pending',
+    isActive: true,
     accountType: 'individual'
   }
 ];
@@ -48,37 +65,67 @@ const DEMO_PROVIDER = {
 };
 
 function ensureAuthStore(app) {
-  if (!app.locals.authStore) {
-    app.locals.authStore = {
-      users: [
-        {
-          id: 'user-demo-admin',
-          ...DEMO_USERS[0],
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 'user-demo-public',
-          ...DEMO_USERS[1],
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 'user-demo-provider',
-          ...DEMO_USERS[2],
-          createdAt: new Date().toISOString()
-        }
-      ],
-      providers: [
-        {
-          id: 'provider-demo-1',
-          userId: 'user-demo-provider',
-          ...DEMO_PROVIDER,
-          createdAt: new Date().toISOString()
-        }
-      ]
-    };
+  const store = ensureFallbackStore(app);
+
+  if (store.users.length === 0) {
+    store.users.push(
+      {
+        id: 'user-demo-super-admin',
+        ...DEMO_USERS[0],
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'user-demo-admin',
+        ...DEMO_USERS[1],
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'user-demo-public',
+        ...DEMO_USERS[2],
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'user-demo-provider',
+        ...DEMO_USERS[3],
+        createdAt: new Date().toISOString()
+      }
+    );
   }
 
-  return app.locals.authStore;
+  if (store.providers.length === 0) {
+    store.providers.push({
+      id: 'provider-demo-1',
+      userId: 'user-demo-provider',
+      ...DEMO_PROVIDER,
+      reviewCount: 12,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  if (store.reviews.length === 0) {
+    store.reviews.push(
+      {
+        id: 'review-demo-1',
+        providerId: 'provider-demo-1',
+        userId: 'user-demo-public',
+        userName: 'Anjali Joseph',
+        rating: 5,
+        comment: 'Reached quickly and fixed the leak without follow-up issues.',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString()
+      },
+      {
+        id: 'review-demo-2',
+        providerId: 'provider-demo-1',
+        userId: 'user-demo-admin',
+        userName: 'Aarav Admin',
+        rating: 4,
+        comment: 'Clear communication and tidy work.',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString()
+      }
+    );
+  }
+
+  return store;
 }
 
 function sanitizeUser(user) {
@@ -88,6 +135,8 @@ function sanitizeUser(user) {
     mobile: user.mobile,
     email: user.email,
     role: user.role,
+    approvalStatus: user.approvalStatus ?? 'approved',
+    isActive: user.isActive ?? true,
     accountType: user.accountType ?? 'individual',
     communityName: user.communityName ?? '',
     locality: user.locality ?? '',
@@ -110,6 +159,7 @@ function sanitizeProvider(provider) {
     experienceYears: provider.experienceYears,
     verified: provider.verified,
     rating: provider.rating,
+    reviewCount: provider.reviewCount ?? 0,
     responseTimeMinutes: provider.responseTimeMinutes,
     highResponseRate: provider.highResponseRate,
     createdAt: provider.createdAt
@@ -124,6 +174,7 @@ async function syncProviderService(provider) {
     city: provider.city,
     verified: provider.verified,
     rating: provider.rating,
+    reviewCount: provider.reviewCount ?? 0,
     responseTimeMinutes: provider.responseTimeMinutes,
     availability: provider.availability,
     highResponseRate: provider.highResponseRate
@@ -142,20 +193,26 @@ async function syncProviderService(provider) {
 
 export async function bootstrapAuthData() {
   const adminUser = await User.findOneAndUpdate(
+    { mobile: DEMO_USERS[1].mobile },
+    { $setOnInsert: DEMO_USERS[1] },
+    { new: true, upsert: true }
+  );
+
+  await User.findOneAndUpdate(
     { mobile: DEMO_USERS[0].mobile },
     { $setOnInsert: DEMO_USERS[0] },
     { new: true, upsert: true }
   );
 
   await User.findOneAndUpdate(
-    { mobile: DEMO_USERS[1].mobile },
-    { $setOnInsert: DEMO_USERS[1] },
+    { mobile: DEMO_USERS[2].mobile },
+    { $setOnInsert: DEMO_USERS[2] },
     { new: true, upsert: true }
   );
 
   const providerUser = await User.findOneAndUpdate(
-    { mobile: DEMO_USERS[2].mobile },
-    { $setOnInsert: DEMO_USERS[2] },
+    { mobile: DEMO_USERS[3].mobile },
+    { $setOnInsert: DEMO_USERS[3] },
     { new: true, upsert: true }
   );
 
@@ -197,6 +254,10 @@ export async function login(req, res) {
       return res.status(401).json({ message: 'Invalid mobile, email, or password' });
     }
 
+    if (user.isActive === false || user.approvalStatus === 'suspended') {
+      return res.status(403).json({ message: 'This account is suspended. Contact support.' });
+    }
+
     const providerProfile = user.role === 'provider' ? await Provider.findOne({ userId: user._id }).lean() : null;
 
     return res.json({
@@ -219,6 +280,10 @@ export async function login(req, res) {
 
   if (!user) {
     return res.status(401).json({ message: 'Invalid mobile, email, or password' });
+  }
+
+  if (user.isActive === false || user.approvalStatus === 'suspended') {
+    return res.status(403).json({ message: 'This account is suspended. Contact support.' });
   }
 
   const providerProfile = user.role === 'provider' ? store.providers.find((entry) => entry.userId === user.id) ?? null : null;
@@ -274,6 +339,8 @@ export async function registerProvider(req, res) {
       email: email || '',
       password,
       role: 'provider',
+      approvalStatus: 'pending',
+      isActive: true,
       accountType: 'individual'
     });
 
@@ -290,6 +357,7 @@ export async function registerProvider(req, res) {
       experienceYears: Number(experienceYears) || 1,
       verified: false,
       rating: 4.2,
+      reviewCount: 0,
       responseTimeMinutes: 15,
       highResponseRate: false
     });
@@ -324,6 +392,8 @@ export async function registerProvider(req, res) {
     email: email || '',
     password,
     role: 'provider',
+    approvalStatus: 'pending',
+    isActive: true,
     accountType: 'individual',
     createdAt
   };
@@ -342,6 +412,7 @@ export async function registerProvider(req, res) {
     experienceYears: Number(experienceYears) || 1,
     verified: false,
     rating: 4.2,
+    reviewCount: 0,
     responseTimeMinutes: 15,
     highResponseRate: false,
     createdAt
@@ -362,7 +433,8 @@ export async function registerProvider(req, res) {
 }
 
 export async function registerUser(req, res) {
-  const { fullName, mobile, email, password, city, accountType = 'individual', communityName = '', locality = '' } = req.body || {};
+  const { fullName, mobile, email, password, city, accountType = 'individual', communityName = '', locality = '', role = 'user' } = req.body || {};
+  const normalizedRole = role === 'admin' ? 'admin' : 'user';
 
   if (!fullName || !mobile || !password || !city) {
     return res.status(400).json({
@@ -382,7 +454,9 @@ export async function registerUser(req, res) {
       mobile,
       email: email || '',
       password,
-      role: 'user',
+      role: normalizedRole,
+      approvalStatus: 'approved',
+      isActive: true,
       accountType,
       communityName: accountType === 'community' ? communityName || fullName : '',
       locality: locality || city
@@ -412,7 +486,9 @@ export async function registerUser(req, res) {
     mobile,
     email: email || '',
     password,
-    role: 'user',
+    role: normalizedRole,
+    approvalStatus: 'approved',
+    isActive: true,
     accountType,
     communityName: accountType === 'community' ? communityName || fullName : '',
     locality: locality || city,

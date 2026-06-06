@@ -1,3 +1,4 @@
+import { ApprovalStatus, UserRole } from '../../../models/user-session.model';
 import { ProviderProfile } from './provider-profile.model';
 
 export interface AuthUser {
@@ -5,7 +6,9 @@ export interface AuthUser {
   fullName: string;
   mobile: string;
   email: string;
-  role: 'admin' | 'provider' | 'user' | 'guest';
+  role: UserRole;
+  approvalStatus?: ApprovalStatus;
+  isActive?: boolean;
   accountType?: 'individual' | 'community';
   communityName?: string;
   locality?: string;
