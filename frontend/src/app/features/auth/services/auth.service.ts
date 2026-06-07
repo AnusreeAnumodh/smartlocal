@@ -98,6 +98,8 @@ export class AuthService {
       user: response.data.user,
       providerProfile: response.data.providerProfile
     });
-    this.router.navigate(['/dashboard']);
+
+    const destination = response.data.user.role === 'super_admin' ? '/admin' : '/dashboard';
+    this.router.navigate([destination]);
   }
 }

@@ -24,7 +24,7 @@
       </div>
 
       <div class="action-row">
-        <button type="submit" [disabled]="loading">{{ loading ? 'Signing in...' : 'Continue' }}</button>
+        <button type="submit" class="submit-action" [disabled]="loading">{{ loading ? 'Signing in...' : 'Continue' }}</button>
         <button type="button" class="ghost-button" (click)="continueAsGuest()" [disabled]="loading">Continue as guest</button>
       </div>
     </form>
@@ -107,7 +107,7 @@
         <input id="address" type="text" [(ngModel)]="signUpForm.address" name="address" placeholder="Business address" />
       </div>
 
-      <button type="submit" [disabled]="loading">{{ loading ? 'Creating account...' : 'Create account' }}</button>
+      <button type="submit" class="submit-action" [disabled]="loading">{{ loading ? 'Creating account...' : 'Create account' }}</button>
     </form>
 
     <div class="helper-row" *ngIf="mode === 'login'">

@@ -15,7 +15,7 @@
 
     <div class="hero-actions">
       <p class="status-note">{{ backendStatus }}</p>
-      <button type="button" class="secondary-action" (click)="refreshDashboard()">Refresh workspace</button>
+      <button type="button" class="update-action" (click)="refreshDashboard()">Refresh workspace</button>
     </div>
 
     <div class="hero-stats" *ngIf="isUserView">
@@ -89,7 +89,7 @@
           </select>
         </label>
 
-        <button type="button" (click)="searchServices()">Update results</button>
+        <button type="button" class="update-action" (click)="searchServices()">Update results</button>
       </div>
 
       <div class="loader-line" *ngIf="providersLoading || servicesLoading || recommendationLoading">
@@ -245,7 +245,7 @@
           <textarea [(ngModel)]="reviewForm.comment" rows="4" placeholder="Share punctuality, quality, and communication details."></textarea>
         </label>
 
-        <button type="button" (click)="submitReview()">Submit rating</button>
+        <button type="button" class="submit-action" (click)="submitReview()">Submit rating</button>
       </article>
 
       <ng-template #feedbackEmpty>
@@ -293,7 +293,7 @@
           </label>
 
           <div class="action-row">
-            <button type="button" (click)="analyzeEmergency()">Analyze now</button>
+            <button type="button" class="update-action" (click)="analyzeEmergency()">Analyze now</button>
             <button type="button" class="danger-button" (click)="sendSosAlert()">Send SOS alert</button>
           </div>
         </article>
@@ -333,7 +333,7 @@
           <p class="eyebrow">Super Admin</p>
           <h3>Approve and manage people, providers, and alerts</h3>
         </div>
-        <button type="button" class="secondary-action" (click)="loadAdminOverview()">Refresh admin data</button>
+        <button type="button" class="update-action" (click)="loadAdminOverview()">Refresh admin data</button>
       </div>
 
       <p class="status-copy" *ngIf="adminStatusMessage">{{ adminStatusMessage }}</p>
@@ -387,7 +387,7 @@
                     </select>
                   </label>
                   <div class="action-row">
-                    <button type="button" class="secondary-action" (click)="updateUserApprovalStatus(user, 'approved')">Approve</button>
+                    <button type="button" class="submit-action" (click)="updateUserApprovalStatus(user, 'approved')">Approve</button>
                     <button type="button" class="secondary-action" (click)="updateUserApprovalStatus(user, 'pending')">Set pending</button>
                     <button type="button" class="danger-button" (click)="updateUserApprovalStatus(user, 'suspended')">Suspend</button>
                   </div>
@@ -414,7 +414,7 @@
                   <app-star-rating [rating]="provider.rating" [showValue]="true" [reviewCount]="provider.reviewCount"></app-star-rating>
                 </div>
                 <div class="action-row">
-                  <button type="button" class="secondary-action" *ngIf="!provider.verified" (click)="setProviderVerification(provider, true)">Approve provider</button>
+                  <button type="button" class="submit-action" *ngIf="!provider.verified" (click)="setProviderVerification(provider, true)">Approve provider</button>
                   <button type="button" class="danger-button" *ngIf="provider.verified" (click)="setProviderVerification(provider, false)">Move to pending</button>
                 </div>
               </article>
@@ -440,8 +440,8 @@
                 </div>
                 <p class="muted">{{ alert.description || 'No incident note provided.' }}</p>
                 <div class="action-row">
-                  <button type="button" class="secondary-action" (click)="setAlertStatus(alert, 'dispatching')">Dispatching</button>
-                  <button type="button" (click)="setAlertStatus(alert, 'resolved')">Resolve</button>
+                  <button type="button" class="update-action" (click)="setAlertStatus(alert, 'dispatching')">Dispatching</button>
+                  <button type="button" class="submit-action" (click)="setAlertStatus(alert, 'resolved')">Resolve</button>
                 </div>
               </article>
             </div>

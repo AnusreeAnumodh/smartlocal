@@ -7,7 +7,7 @@
     </div>
     <div class="hero-note">
       <span *ngIf="source">Source: {{ source }}</span>
-      <button type="button" (click)="loadOverview()">Refresh</button>
+      <button type="button" class="update-action" (click)="loadOverview()">Refresh</button>
     </div>
   </section>
 
@@ -53,7 +53,7 @@
             </div>
             <div class="row-actions">
               <span class="verify-pill" [class.unverified]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
-              <button type="button" (click)="setProviderVerification(provider, !provider.verified)">
+              <button type="button" class="submit-action" (click)="setProviderVerification(provider, !provider.verified)">
                 {{ provider.verified ? 'Mark pending' : 'Verify' }}
               </button>
             </div>
@@ -83,8 +83,8 @@
             <p class="muted">{{ alert.description || 'No extra incident description shared.' }}</p>
             <p class="muted">Dispatch to: {{ alert.assignedProviderCategory | capitalize }}</p>
             <div class="action-row">
-              <button type="button" (click)="setAlertStatus(alert, 'dispatching')">Dispatching</button>
-              <button type="button" (click)="setAlertStatus(alert, 'resolved')">Resolve</button>
+              <button type="button" class="update-action" (click)="setAlertStatus(alert, 'dispatching')">Dispatching</button>
+              <button type="button" class="submit-action" (click)="setAlertStatus(alert, 'resolved')">Resolve</button>
             </div>
           </article>
         </div>
