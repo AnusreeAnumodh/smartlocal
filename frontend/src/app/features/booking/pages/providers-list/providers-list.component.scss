@@ -1,0 +1,26 @@
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 1.5rem;
+
+  input[type='checkbox'] {
+    width: auto;
+    accent-color: var(--brand-vivid);
+  }
+}
+
+.provider-card {
+  cursor: pointer;
+  text-decoration: none;
+  text-align: left;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+@media (max-width: 720px) {
+  .checkbox-field {
+    padding-top: 0;
+  }
+}

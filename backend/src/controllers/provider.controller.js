@@ -18,6 +18,11 @@ function sanitizeProvider(provider) {
     city: provider.city,
     address: provider.address,
     availability: provider.availability,
+    availabilitySlots: (provider.availabilitySlots || []).map((slot) => ({
+      day: slot.day,
+      startTime: slot.startTime,
+      endTime: slot.endTime
+    })),
     experienceYears: provider.experienceYears,
     verified: provider.verified,
     rating: provider.rating,
@@ -54,17 +59,51 @@ async function recalculateProviderRating(providerIdentifier, provider) {
   return { averageRating, reviewCount };
 }
 
+function isTimeInRange(time, startTime, endTime) {
+  const toMinutes = (t) => {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const timeMin = toMinutes(time);
+  const startMin = toMinutes(startTime);
+  const endMin = toMinutes(endTime);
+
+  if (endMin <= startMin) {
+    return timeMin >= startMin || timeMin <= endMin;
+  }
+
+  return timeMin >= startMin && timeMin <= endMin;
+}
+
+function isProviderAvailableForSlot(provider, day, time) {
+  if (!provider.availabilitySlots || provider.availabilitySlots.length === 0) {
+    return provider.availability === 'available';
+  }
+
+  const daySlots = provider.availabilitySlots.filter((slot) => slot.day === day);
+  if (daySlots.length === 0) return false;
+
+  return daySlots.some((slot) => isTimeInRange(time, slot.startTime, slot.endTime));
+}
+
 export async function listProviders(req, res) {
-  const { category, city } = req.query;
+  const { category, city, day, time } = req.query;
   const normalizedCategory = category ? String(category).toLowerCase() : '';
   const normalizedCity = city ? String(city).toLowerCase() : '';
+  const filterDay = day ? String(day).toLowerCase() : '';
+  const filterTime = time ? String(time).toLowerCase() : '';
 
   if (req.app.locals.dbConnected) {
     const query = {};
     if (normalizedCategory) query.category = normalizedCategory;
     if (normalizedCity) query.city = new RegExp(`^${String(city)}$`, 'i');
 
-    const data = (await Provider.find(query).sort({ verified: -1, createdAt: -1 }).lean()).map(sanitizeProvider);
+    let data = (await Provider.find(query).sort({ verified: -1, createdAt: -1 }).lean()).map(sanitizeProvider);
+
+    if (filterDay && filterTime) {
+      data = data.filter((provider) => isProviderAvailableForSlot(provider, filterDay, filterTime));
+    }
 
     return res.json({
       count: data.length,
@@ -75,7 +114,7 @@ export async function listProviders(req, res) {
 
   const store = ensureAuthStore(req.app);
 
-  const data = store.providers
+  let data = store.providers
     .filter((provider) => {
       const categoryMatch = normalizedCategory ? provider.category === normalizedCategory : true;
       const cityMatch = normalizedCity ? provider.city.toLowerCase() === normalizedCity : true;
@@ -83,6 +122,10 @@ export async function listProviders(req, res) {
     })
     .map(sanitizeProvider)
     .sort((left, right) => Number(right.verified) - Number(left.verified));
+
+  if (filterDay && filterTime) {
+    data = data.filter((provider) => isProviderAvailableForSlot(provider, filterDay, filterTime));
+  }
 
   return res.json({
     count: data.length,

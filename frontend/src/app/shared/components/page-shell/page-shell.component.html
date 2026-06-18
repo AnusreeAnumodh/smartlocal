@@ -8,6 +8,9 @@
     <div class="page-shell-actions">
       <nav class="page-shell-nav">
         <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        <a routerLink="/booking/providers" routerLinkActive="active">Providers</a>
+        <a routerLink="/booking/my-bookings" routerLinkActive="active">My Bookings</a>
+        <a routerLink="/booking/manage" routerLinkActive="active" *ngIf="isProviderOrAdmin">Manage Requests</a>
       </nav>
     </div>
   </header>

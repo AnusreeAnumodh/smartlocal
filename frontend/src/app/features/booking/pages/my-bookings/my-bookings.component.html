@@ -1,0 +1,109 @@
+<app-page-shell title="My Bookings" subtitle="Track your service booking requests">
+  <section class="panel section-panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Booking status</p>
+        <h3>Your requests</h3>
+      </div>
+      <span class="count-pill" *ngIf="bookings.length">{{ filteredBookings.length }} of {{ bookings.length }}</span>
+    </div>
+
+    <div class="filter-row">
+      <label class="field compact-field">
+        <span>Filter by status</span>
+        <select [(ngModel)]="filterStatus">
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="accepted">Accepted</option>
+          <option value="rejected">Rejected</option>
+          <option value="completed">Completed</option>
+        </select>
+      </label>
+      <button type="button" class="update-action" (click)="loadBookings()">Refresh</button>
+    </div>
+
+    <p class="muted" *ngIf="source">Source: {{ source }}</p>
+  </section>
+
+  <div class="loader-line" *ngIf="loading">
+    <span></span>
+  </div>
+
+  <section class="panel section-panel" *ngIf="!loading">
+    <div class="booking-stack" *ngIf="filteredBookings.length; else noBookings">
+      <article class="booking-card" *ngFor="let booking of filteredBookings">
+        <div class="booking-header">
+          <div>
+            <strong>{{ booking.businessName || 'Service Provider' }}</strong>
+            <p class="muted">{{ booking.serviceCategory | capitalize }} &middot; {{ booking.scheduledDate | date:'mediumDate' }} at {{ booking.scheduledTime }}</p>
+          </div>
+          <span class="status-badge" [ngClass]="statusClass(booking.status)">{{ booking.status | uppercase }}</span>
+        </div>
+
+        <div class="booking-details">
+          <p *ngIf="booking.notes"><strong>Notes:</strong> {{ booking.notes }}</p>
+          <p class="muted">Requested on {{ booking.createdAt | date:'medium' }}</p>
+        </div>
+
+        <div class="completion-notification" *ngIf="booking.status === 'completed' && !booking.feedbackGiven">
+          <strong>Work completed!</strong>
+          <p>The provider has marked this task as finished. Please rate your experience.</p>
+        </div>
+
+        <div class="call-panel" *ngIf="(booking.status === 'accepted' || booking.status === 'completed') && booking.providerPhone">
+          <span>Contact {{ booking.businessName }}:</span>
+          <a [href]="'tel:' + booking.providerPhone" class="call-button">
+            Call {{ booking.providerPhone }}
+          </a>
+        </div>
+
+        <div class="rejection-panel" *ngIf="booking.status === 'rejected' && booking.rejectionReason">
+          <strong>Reason for rejection:</strong>
+          <p>{{ booking.rejectionReason }}</p>
+        </div>
+
+        <div class="feedback-section" *ngIf="booking.status === 'completed' && !booking.feedbackGiven">
+          <div class="feedback-form" *ngIf="getFeedbackForm(booking.id) as form">
+            <p class="eyebrow">Rate your service experience</p>
+            <p class="status-copy" *ngIf="form.message">{{ form.message }}</p>
+            <p class="error-copy" *ngIf="form.error">{{ form.error }}</p>
+
+            <label class="field">
+              <span>Rating</span>
+              <select [(ngModel)]="form.rating">
+                <option [value]="5">5 - Excellent</option>
+                <option [value]="4">4 - Good</option>
+                <option [value]="3">3 - Average</option>
+                <option [value]="2">2 - Below average</option>
+                <option [value]="1">1 - Poor</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Review</span>
+              <textarea [(ngModel)]="form.comment" rows="3" placeholder="Share your experience with this provider..."></textarea>
+            </label>
+
+            <button
+              type="button"
+              class="submit-action"
+              [disabled]="form.submitting"
+              (click)="submitFeedback(booking)"
+            >
+              {{ form.submitting ? 'Submitting...' : 'Submit feedback' }}
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <ng-template #noBookings>
+      <article class="panel inset-panel guidance-card">
+        <p class="eyebrow">No bookings yet</p>
+        <h4>You have not made any booking requests</h4>
+        <p class="muted">Browse providers to book a service.</p>
+        <button type="button" class="update-action" routerLink="/booking/providers">Browse providers</button>
+      </article>
+    </ng-template>
+  </section>
+</app-page-shell>

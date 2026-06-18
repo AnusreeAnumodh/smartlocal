@@ -19,6 +19,11 @@ const routes: Routes = [
     data: { roles: ['super_admin'] },
     loadChildren: () => import('./features/admin/admin.module').then((m) => m.AdminModule)
   },
+  {
+    path: 'booking',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./features/booking/booking.module').then((m) => m.BookingModule)
+  },
   { path: '', pathMatch: 'full', redirectTo: 'auth/login' },
   { path: '**', redirectTo: 'auth/login' }
 ];

@@ -8,6 +8,7 @@ import smartLockRoutes from './routes/smart-lock.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import providerRoutes from './routes/provider.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import bookingRoutes from './routes/booking.routes.js';
 import { connectDB } from './config/db.js';
 import { bootstrapServices } from './controllers/service.controller.js';
 import { bootstrapAuthData } from './controllers/auth.controller.js';
@@ -53,6 +54,7 @@ app.use('/api/providers', providerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/smart-lock', smartLockRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 app.get('/', (_req, res) => {
   res.json({

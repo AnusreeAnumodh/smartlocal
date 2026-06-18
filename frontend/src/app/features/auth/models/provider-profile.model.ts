@@ -1,3 +1,9 @@
+export interface AvailabilitySlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
+
 export interface ProviderProfile {
   id: string;
   userId: string;
@@ -9,6 +15,7 @@ export interface ProviderProfile {
   city: string;
   address: string;
   availability: string;
+  availabilitySlots?: AvailabilitySlot[];
   experienceYears: number;
   verified: boolean;
   rating: number;

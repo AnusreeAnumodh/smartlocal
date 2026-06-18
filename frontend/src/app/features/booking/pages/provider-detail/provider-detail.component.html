@@ -1,0 +1,163 @@
+<app-page-shell [title]="provider?.businessName || 'Provider'" subtitle="View profile and book a service">
+  <div class="loader-line" *ngIf="loading">
+    <span></span>
+  </div>
+
+  <ng-container *ngIf="!loading && provider as prov">
+    <section class="panel section-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">{{ prov.category | capitalize }}</p>
+          <h3>{{ prov.businessName }}</h3>
+        </div>
+        <span class="status-badge" [class.pending]="!prov.verified">{{ prov.verified ? 'Verified' : 'Pending' }}</span>
+      </div>
+
+      <div class="detail-grid">
+        <article class="panel inset-panel">
+          <div class="detail-stats">
+            <article class="metric-card">
+              <span>Rating</span>
+              <strong><app-star-rating [rating]="prov.rating" [showValue]="true" [reviewCount]="prov.reviewCount"></app-star-rating></strong>
+            </article>
+            <article class="metric-card">
+              <span>Status</span>
+              <strong>{{ prov.availability | capitalize }}</strong>
+            </article>
+            <article class="metric-card">
+              <span>Response</span>
+              <strong>{{ prov.responseTimeMinutes }} mins</strong>
+            </article>
+            <article class="metric-card">
+              <span>Experience</span>
+              <strong>{{ prov.experienceYears }} yr</strong>
+            </article>
+          </div>
+
+          <div class="detail-list">
+            <p><strong>Owner:</strong> {{ prov.ownerName }}</p>
+            <p><strong>Phone:</strong> {{ prov.mobile }}</p>
+            <p><strong>Email:</strong> {{ prov.email || 'Not shared' }}</p>
+            <p><strong>City:</strong> {{ prov.city }}</p>
+            <p><strong>Address:</strong> {{ prov.address || prov.city }}</p>
+          </div>
+        </article>
+
+        <article class="panel inset-panel">
+          <div class="section-head compact-head">
+            <div>
+              <p class="eyebrow">Availability schedule</p>
+              <h4>Service hours</h4>
+            </div>
+          </div>
+
+          <div class="availability-list" *ngIf="prov.availabilitySlots?.length; else alwaysAvailable">
+            <div class="availability-row" *ngFor="let slot of prov.availabilitySlots">
+              <span class="day-label">{{ getDayLabel(slot.day) }}</span>
+              <span>{{ slot.startTime }} - {{ slot.endTime }}</span>
+            </div>
+          </div>
+
+          <ng-template #alwaysAvailable>
+            <p class="muted">Provider has not set specific hours. Contact directly for availability.</p>
+          </ng-template>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel section-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Book a service</p>
+          <h3>Select date and time</h3>
+        </div>
+      </div>
+
+      <p class="status-copy" *ngIf="bookingMessage">{{ bookingMessage }}</p>
+      <p class="error-copy" *ngIf="bookingError">{{ bookingError }}</p>
+
+      <div class="booking-form">
+        <div class="form-row">
+          <label class="field">
+            <span>Preferred date</span>
+            <input type="date" [(ngModel)]="selectedDate" [min]="minDate" />
+          </label>
+
+          <label class="field">
+            <span>Preferred time</span>
+            <select [(ngModel)]="selectedTime">
+              <option value="">Select time</option>
+              <option *ngFor="let slot of timeSlots" [value]="slot">{{ slot }}</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Notes (optional)</span>
+          <textarea [(ngModel)]="notes" rows="3" placeholder="Describe what you need help with..."></textarea>
+        </label>
+
+        <div class="action-row">
+          <button
+            type="button"
+            class="submit-action"
+            [disabled]="!canBook || bookingLoading"
+            (click)="sendBookingRequest()"
+          >
+            {{ bookingLoading ? 'Sending...' : 'Send booking request' }}
+          </button>
+        </div>
+
+        <p class="muted" *ngIf="!sessionService.isAuthenticated">
+          <a routerLink="/auth/login">Log in</a> to send a booking request.
+        </p>
+
+        <p class="muted" *ngIf="selectedTime && !isProviderAvailableAtSlot">
+          This provider may not be available at the selected time. The request will be sent for their review.
+        </p>
+      </div>
+    </section>
+
+    <section class="panel section-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Reviews</p>
+          <h3>Customer feedback</h3>
+        </div>
+        <span class="count-pill" *ngIf="reviews.length">{{ reviews.length }} reviews</span>
+      </div>
+
+      <div class="loader-line" *ngIf="reviewLoading">
+        <span></span>
+      </div>
+
+      <div class="review-stack" *ngIf="reviews.length; else noReviews">
+        <article class="review-card" *ngFor="let review of reviews">
+          <div class="review-head">
+            <strong>{{ review.userName }}</strong>
+            <app-star-rating [rating]="review.rating" [showValue]="true"></app-star-rating>
+          </div>
+          <p class="muted">{{ review.comment }}</p>
+          <p class="muted date">{{ review.createdAt | date:'mediumDate' }}</p>
+        </article>
+      </div>
+
+      <ng-template #noReviews>
+        <article class="panel inset-panel guidance-card">
+          <p class="eyebrow">No reviews yet</p>
+          <h4>Be the first to review</h4>
+        </article>
+      </ng-template>
+    </section>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && !provider">
+    <section class="panel section-panel">
+      <article class="panel inset-panel guidance-card">
+        <p class="eyebrow">Provider not found</p>
+        <h4>The provider you are looking for does not exist</h4>
+        <button type="button" class="update-action" routerLink="/booking/providers">Browse all providers</button>
+      </article>
+    </section>
+  </ng-container>
+</app-page-shell>

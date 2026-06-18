@@ -1,0 +1,97 @@
+<app-page-shell title="Providers" subtitle="Browse and book local service providers">
+  <section class="panel section-panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Find a provider</p>
+        <h3>Search by category, location, or schedule</h3>
+      </div>
+      <span class="count-pill" *ngIf="filteredProviders.length">{{ filteredProviders.length }} results</span>
+    </div>
+
+    <div class="filter-grid">
+      <label class="field">
+        <span>Category</span>
+        <select [(ngModel)]="category">
+          <option value="">All categories</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat | capitalize }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>City</span>
+        <select [(ngModel)]="city">
+          <option value="">All cities</option>
+          <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+        </select>
+      </label>
+
+      <label class="field checkbox-field">
+        <input type="checkbox" [(ngModel)]="useScheduleFilter" />
+        <span>Filter by availability</span>
+      </label>
+
+      <ng-container *ngIf="useScheduleFilter">
+        <label class="field">
+          <span>Day</span>
+          <select [(ngModel)]="selectedDay">
+            <option value="">Select day</option>
+            <option *ngFor="let day of days" [value]="day.value">{{ day.label }}</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Time</span>
+          <select [(ngModel)]="selectedTime">
+            <option value="">Select time</option>
+            <option *ngFor="let slot of timeSlots" [value]="slot">{{ slot }}</option>
+          </select>
+        </label>
+      </ng-container>
+
+      <div class="action-row">
+        <button type="button" class="update-action" (click)="search()">Search</button>
+        <button type="button" class="secondary-action" (click)="clearFilters()">Clear</button>
+      </div>
+    </div>
+
+    <p class="muted" *ngIf="source">Source: {{ source }}</p>
+  </section>
+
+  <div class="loader-line" *ngIf="loading">
+    <span></span>
+  </div>
+
+  <section class="panel section-panel" *ngIf="!loading">
+    <div class="providers-layout" *ngIf="filteredProviders.length; else noProviders">
+      <article class="panel inset-panel">
+        <div class="provider-stack">
+          <button
+            type="button"
+            class="provider-card"
+            *ngFor="let provider of filteredProviders"
+            [routerLink]="['/booking/providers', provider.id]"
+          >
+            <div class="provider-copy">
+              <strong>{{ provider.businessName }}</strong>
+              <span>{{ provider.ownerName }} &middot; {{ provider.city }}</span>
+              <span class="muted">{{ provider.category | capitalize }} &middot; {{ provider.experienceYears }}yr exp</span>
+            </div>
+
+            <div class="provider-meta">
+              <span class="status-badge" [class.pending]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
+              <app-star-rating [rating]="provider.rating" [showValue]="true" [reviewCount]="provider.reviewCount"></app-star-rating>
+            </div>
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <ng-template #noProviders>
+      <article class="panel inset-panel guidance-card">
+        <p class="eyebrow">No providers found</p>
+        <h4>Try adjusting your filters</h4>
+        <p class="muted">No providers match your current criteria. Try a different category, city, or schedule.</p>
+      </article>
+    </ng-template>
+  </section>
+</app-page-shell>

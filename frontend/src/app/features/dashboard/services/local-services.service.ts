@@ -36,10 +36,12 @@ export class LocalServicesService {
     return this.api.get(`/services/recommendation?${query.toString()}`);
   }
 
-  getProviders(category?: string, city?: string): Observable<{ data: ProviderProfile[]; count: number; source: string }> {
+  getProviders(category?: string, city?: string, day?: string, time?: string): Observable<{ data: ProviderProfile[]; count: number; source: string }> {
     const query = new URLSearchParams();
     if (category) query.append('category', category);
     if (city) query.append('city', city);
+    if (day) query.append('day', day);
+    if (time) query.append('time', time);
     const suffix = query.toString();
     return this.api.get(`/providers${suffix ? `?${suffix}` : ''}`);
   }

@@ -1,0 +1,136 @@
+<app-page-shell title="Manage Bookings" subtitle="Accept or reject service requests from customers">
+  <section class="panel section-panel" *ngIf="sessionService.session?.providerProfile; else noProviderProfile">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Request management</p>
+        <h3>Customer booking requests</h3>
+      </div>
+      <span class="count-pill" *ngIf="bookings.length">{{ filteredBookings.length }} of {{ bookings.length }}</span>
+    </div>
+
+    <div class="filter-row">
+      <label class="field compact-field">
+        <span>Filter by status</span>
+        <select [(ngModel)]="filterStatus">
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="accepted">Accepted</option>
+          <option value="rejected">Rejected</option>
+          <option value="completed">Completed</option>
+        </select>
+      </label>
+      <button type="button" class="update-action" (click)="loadBookings()">Refresh</button>
+    </div>
+
+    <p class="muted" *ngIf="source">Source: {{ source }}</p>
+  </section>
+
+  <div class="loader-line" *ngIf="loading">
+    <span></span>
+  </div>
+
+  <section class="panel section-panel" *ngIf="!loading">
+    <div class="booking-stack" *ngIf="filteredBookings.length; else noBookings">
+      <article class="booking-card" *ngFor="let booking of filteredBookings">
+        <div class="booking-header">
+          <div>
+            <strong>{{ booking.userName || 'Customer' }}</strong>
+            <p class="muted">{{ booking.serviceCategory | capitalize }} &middot; {{ booking.scheduledDate | date:'mediumDate' }} at {{ booking.scheduledTime }}</p>
+          </div>
+          <span class="status-badge" [ngClass]="statusClass(booking.status)">{{ booking.status | uppercase }}</span>
+        </div>
+
+        <div class="booking-details">
+          <p *ngIf="booking.userPhone"><strong>Phone:</strong> {{ booking.userPhone }}</p>
+          <p *ngIf="booking.userEmail"><strong>Email:</strong> {{ booking.userEmail }}</p>
+          <p *ngIf="booking.notes"><strong>Notes:</strong> {{ booking.notes }}</p>
+          <p class="muted">Requested on {{ booking.createdAt | date:'medium' }}</p>
+        </div>
+
+        <div class="call-panel" *ngIf="(booking.status === 'accepted' || booking.status === 'completed') && booking.userPhone">
+          <span>Contact {{ booking.userName }}:</span>
+          <a [href]="'tel:' + booking.userPhone" class="call-button">
+            Call {{ booking.userPhone }}
+          </a>
+        </div>
+
+        <div class="rejection-panel" *ngIf="booking.status === 'rejected' && booking.rejectionReason">
+          <strong>Your rejection reason:</strong>
+          <p>{{ booking.rejectionReason }}</p>
+        </div>
+
+        <div class="action-row booking-actions" *ngIf="booking.status === 'pending'">
+          <button
+            type="button"
+            class="submit-action"
+            [disabled]="actionLoading === booking.id"
+            (click)="acceptBooking(booking.id)"
+          >
+            {{ actionLoading === booking.id ? 'Processing...' : 'Accept request' }}
+          </button>
+          <button
+            type="button"
+            [class.danger-button]="!showRejectForm[booking.id]"
+            [class.secondary-action]="showRejectForm[booking.id]"
+            (click)="toggleRejectForm(booking.id)"
+          >
+            {{ showRejectForm[booking.id] ? 'Cancel' : 'Reject request' }}
+          </button>
+        </div>
+
+        <div class="reject-form" *ngIf="showRejectForm[booking.id]">
+          <label class="field">
+            <span>Reason for rejection <strong class="required">*</strong></span>
+            <textarea
+              [(ngModel)]="rejectionReasons[booking.id]"
+              rows="3"
+              placeholder="e.g., Unavailable, scheduling conflict, outside service area..."
+            ></textarea>
+          </label>
+          <button
+            type="button"
+            class="danger-button"
+            [disabled]="!rejectionReasons[booking.id].trim() || actionLoading === booking.id"
+            (click)="rejectBooking(booking.id)"
+          >
+            {{ actionLoading === booking.id ? 'Processing...' : 'Confirm rejection' }}
+          </button>
+        </div>
+
+        <div class="action-row booking-actions" *ngIf="booking.status === 'accepted'">
+          <button
+            type="button"
+            class="submit-action"
+            [disabled]="actionLoading === booking.id"
+            (click)="completeBooking(booking.id)"
+          >
+            {{ actionLoading === booking.id ? 'Processing...' : 'Mark as completed' }}
+          </button>
+        </div>
+
+        <div class="completion-notification" *ngIf="completionMessage[booking.id]">
+          <strong>Customer notified!</strong>
+          <p>{{ completionMessage[booking.id] }}</p>
+        </div>
+      </article>
+    </div>
+
+    <ng-template #noBookings>
+      <article class="panel inset-panel guidance-card">
+        <p class="eyebrow">No requests</p>
+        <h4>No booking requests found</h4>
+        <p class="muted">When customers send booking requests, they will appear here.</p>
+      </article>
+    </ng-template>
+  </section>
+</app-page-shell>
+
+<ng-template #noProviderProfile>
+  <section class="panel section-panel">
+    <article class="panel inset-panel guidance-card">
+      <p class="eyebrow">Provider access only</p>
+      <h4>You must be logged in as a provider</h4>
+      <p class="muted">This page is for managing booking requests for your services. Register or log in as a provider to access this feature.</p>
+    </article>
+  </section>
+</ng-template>

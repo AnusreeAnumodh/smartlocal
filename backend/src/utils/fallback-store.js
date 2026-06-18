@@ -95,7 +95,8 @@ export function ensureFallbackStore(app) {
           createdAt: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString()
         }
       ],
-      sosAlerts: []
+      sosAlerts: [],
+      bookings: []
     };
   }
 

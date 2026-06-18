@@ -20,6 +20,10 @@ export class PageShellComponent {
     return this.sessionService.session?.user.role ?? 'guest';
   }
 
+  get isProviderOrAdmin(): boolean {
+    return this.sessionService.isProvider || this.sessionService.isAdmin;
+  }
+
   logout(): void {
     this.authService.logout();
   }
