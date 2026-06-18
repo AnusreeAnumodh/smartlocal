@@ -113,21 +113,22 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: var(--control-height, 48px);
-  padding: 0.8rem 1.05rem;
-  border-radius: var(--radius-md, 14px);
-  border: 1px solid transparent;
+  min-height: 40px;
+  padding: 0.62rem 0.92rem;
+  border-radius: 999px;
+  border: 1px solid rgba(59, 130, 246, 0.18);
   font-weight: 700;
+  font-size: 0.9rem;
   cursor: pointer;
   text-decoration: none;
   color: #ffffff;
   background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.22);
+  box-shadow: 0 8px 18px rgba(59, 130, 246, 0.18);
   transition: transform 180ms ease, box-shadow 220ms ease;
 
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 14px 28px rgba(59, 130, 246, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px rgba(59, 130, 246, 0.24);
   }
 }
 

@@ -67,21 +67,23 @@ p {
   justify-content: center;
   border-radius: 999px;
   border: 1px solid rgba(73, 93, 128, 0.14);
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.78);
   color: var(--ink-strong);
   text-decoration: none;
   font: inherit;
   font-weight: 700;
+  font-size: 0.9rem;
   line-height: 1.1;
-  min-height: 44px;
-  padding: 0.75rem 1rem;
+  min-height: 38px;
+  padding: 0.58rem 0.92rem;
+  box-shadow: 0 4px 12px rgba(76, 64, 43, 0.06);
   transition: transform 180ms ease, box-shadow 220ms ease, background-color 180ms ease, color 180ms ease, border-color 180ms ease;
   cursor: pointer;
 }
 
 .page-shell-nav a:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(76, 64, 43, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(76, 64, 43, 0.12);
 }
 
 .page-shell-nav a.active {

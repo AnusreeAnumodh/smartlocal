@@ -25,9 +25,9 @@
   --space-panel: clamp(1rem, 1.8vw, 1.4rem);
   --space-card: clamp(0.9rem, 1.5vw, 1.1rem);
   --space-stack: clamp(0.9rem, 1.6vw, 1.25rem);
-  --control-height: 48px;
-  --control-padding-x: 1rem;
-  --control-padding-y: 0.8rem;
+  --control-height: 42px;
+  --control-padding-x: 0.9rem;
+  --control-padding-y: 0.68rem;
   --copy-tight: 1.25;
   --copy-normal: 1.55;
 }
@@ -73,7 +73,8 @@ textarea {
     border-color 180ms ease,
     background-color 180ms ease,
     opacity 180ms ease,
-    filter 180ms ease;
+    filter 180ms ease,
+    color 180ms ease;
   border-radius: var(--radius-md);
 }
 
@@ -87,7 +88,12 @@ button {
   line-height: 1.1;
   border: 1px solid transparent;
   font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 input,
@@ -107,12 +113,12 @@ textarea {
 }
 
 button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(76, 64, 43, 0.18);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 12px 24px rgba(76, 64, 43, 0.16);
 }
 
 button:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.985);
 }
 
 button:disabled {
@@ -199,34 +205,55 @@ option {
 .secondary-action,
 .ghost-button {
   min-height: var(--control-height);
-  padding: 0.8rem 1.05rem;
+  padding: 0.66rem 0.95rem;
+  border-width: 1px;
+  border-style: solid;
+  background-size: 160% 160%;
 }
 
 .primary-action,
 .submit-action {
   color: #ffffff;
-  background: linear-gradient(135deg, #0f766e, var(--brand-mint));
-  box-shadow: 0 12px 24px rgba(46, 169, 125, 0.22);
+  border-color: rgba(8, 92, 83, 0.24);
+  background-image: linear-gradient(135deg, #137768, #34b08a);
+  box-shadow: 0 8px 18px rgba(46, 169, 125, 0.2);
 }
 
 .update-action {
   color: #ffffff;
-  background: linear-gradient(135deg, #a85516, var(--brand-warm));
-  box-shadow: 0 12px 24px rgba(240, 138, 75, 0.22);
+  border-color: rgba(164, 85, 22, 0.24);
+  background-image: linear-gradient(135deg, #b35c1d, #f19857);
+  box-shadow: 0 8px 18px rgba(240, 138, 75, 0.2);
 }
 
 .danger-button {
   color: #ffffff;
-  background: linear-gradient(135deg, #b91c1c, var(--danger));
-  box-shadow: 0 12px 24px rgba(239, 68, 68, 0.2);
+  border-color: rgba(185, 28, 28, 0.24);
+  background-image: linear-gradient(135deg, #c52828, #f05a5a);
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.18);
 }
 
 .secondary-action,
 .ghost-button {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.8);
   color: var(--ink-strong);
-  border-color: rgba(73, 93, 128, 0.16);
-  box-shadow: none;
+  border-color: rgba(73, 93, 128, 0.18);
+  box-shadow: 0 4px 12px rgba(76, 64, 43, 0.06);
+}
+
+.primary-action:hover:not(:disabled),
+.submit-action:hover:not(:disabled),
+.update-action:hover:not(:disabled),
+.danger-button:hover:not(:disabled) {
+  filter: saturate(1.08);
+  background-position: 100% 0;
+}
+
+.secondary-action:hover:not(:disabled),
+.ghost-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(45, 127, 249, 0.24);
+  color: var(--brand-deep);
 }
 
 h3,
