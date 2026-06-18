@@ -266,6 +266,16 @@
         <span class="count-pill">{{ city }}</span>
       </div>
 
+      <div class="provider-status-warning" *ngIf="!hasSelectedProviders">
+        <strong>Providers required</strong>
+        <p>Browse and select providers in the Providers tab before sending an SOS alert. SOS notifications will be sent to both you and the admin team.</p>
+      </div>
+
+      <div class="provider-status-ready" *ngIf="hasSelectedProviders">
+        <strong>{{ providers.length }} provider(s) loaded</strong>
+        <p>SOS alert will notify you, the admin team, and your selected providers simultaneously.</p>
+      </div>
+
       <div class="sos-layout">
         <article class="panel inset-panel">
           <div class="preset-list">
@@ -294,7 +304,15 @@
 
           <div class="action-row">
             <button type="button" class="update-action" (click)="analyzeEmergency()">Analyze now</button>
-            <button type="button" class="danger-button" (click)="sendSosAlert()">Send SOS alert</button>
+            <button
+              type="button"
+              class="danger-button"
+              [class.disabled-looking]="!hasSelectedProviders"
+              [disabled]="!hasSelectedProviders"
+              (click)="sendSosAlert()"
+            >
+              {{ !hasSelectedProviders ? 'Select providers first' : 'Send SOS alert' }}
+            </button>
           </div>
         </article>
 

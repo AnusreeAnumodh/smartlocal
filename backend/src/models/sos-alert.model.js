@@ -13,7 +13,8 @@ const sosAlertSchema = new mongoose.Schema(
     status: { type: String, default: 'queued' },
     priority: { type: String, default: 'medium' },
     recommendedActions: { type: [String], default: [] },
-    assignedProviderCategory: { type: String, default: '' }
+    assignedProviderCategory: { type: String, default: '' },
+    selectedProviderIds: { type: [String], default: [] }
   },
   { timestamps: true }
 );

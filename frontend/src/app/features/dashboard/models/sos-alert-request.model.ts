@@ -7,4 +7,5 @@ export interface SosAlertRequest {
   description: string;
   latitude: number;
   longitude: number;
+  selectedProviderIds?: string[];
 }

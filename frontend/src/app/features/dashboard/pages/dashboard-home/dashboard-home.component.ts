@@ -244,6 +244,10 @@ export class DashboardHomeComponent implements OnInit {
       });
   }
 
+  get hasSelectedProviders(): boolean {
+    return this.providers.length > 0;
+  }
+
   analyzeEmergency(): void {
     this.emergencyStatusMessage = '';
     this.emergencyErrorMessage = '';
@@ -278,7 +282,13 @@ export class DashboardHomeComponent implements OnInit {
       return;
     }
 
+    if (!this.hasSelectedProviders) {
+      this.sosErrorMessage = 'Select at least one provider in the Providers tab before sending an SOS alert.';
+      return;
+    }
+
     const coords = CITY_COORDINATES[this.city] ?? CITY_COORDINATES['Ernakulam'];
+    const selectedIds = this.providers.map((p) => p.id);
     const payload: SosAlertRequest = {
       userId: this.currentUserId,
       userName: this.currentUserName,
@@ -287,13 +297,17 @@ export class DashboardHomeComponent implements OnInit {
       emergencyType: this.emergencyType,
       description: this.emergencyQuery.trim(),
       latitude: coords.latitude,
-      longitude: coords.longitude
+      longitude: coords.longitude,
+      selectedProviderIds: selectedIds
     };
 
     this.sosLoading = true;
     this.localServices.triggerSos(payload).subscribe({
       next: (response) => {
         this.sosStatusMessage = response.message;
+        if (response.notifications) {
+          this.sosStatusMessage += ` (You: ${response.notifications.user.status}, Admin: ${response.notifications.admin.status})`;
+        }
         this.sosLoading = false;
       },
       error: (error: Error) => {

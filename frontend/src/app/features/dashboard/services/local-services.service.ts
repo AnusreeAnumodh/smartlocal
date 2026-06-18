@@ -98,7 +98,14 @@ export class LocalServicesService {
     return this.api.post('/marketplace/payments/order', payload);
   }
 
-  triggerSos(payload: SosAlertRequest): Observable<{ message: string }> {
+  triggerSos(payload: SosAlertRequest): Observable<{
+    message: string;
+    notifications?: {
+      user: { channel: string; status: string; recipient: string };
+      admin: { channel: string; status: string; recipient: string };
+    };
+    alert?: unknown;
+  }> {
     return this.api.post('/emergency/sos', payload);
   }
 

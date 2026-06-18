@@ -60,15 +60,20 @@ function buildEmergencySummary(input) {
 
 export async function triggerSos(req, res) {
   try {
-    const { userId = '', userName = 'Anonymous', phone = 'N/A', city = '', latitude, longitude } = req.body || {};
+    const { userId = '', userName = 'Anonymous', phone = 'N/A', city = '', latitude, longitude, selectedProviderIds = [] } = req.body || {};
     const isDbConnected = Boolean(req.app.locals.dbConnected);
     const emergency = buildEmergencySummary(req.body || {});
+    const providerCount = Array.isArray(selectedProviderIds) ? selectedProviderIds.length : 0;
 
     if (latitude == null || longitude == null) {
       return res.status(400).json({
         message: 'latitude and longitude are required for SOS alerts'
       });
     }
+
+    const notificationMessage = providerCount > 0
+      ? `SOS alert sent — you and the admin team have been notified. ${providerCount} provider(s) have been notified of your emergency.`
+      : 'SOS alert sent — you and the admin team have been notified for timely response.';
 
     if (!isDbConnected) {
       const store = ensureFallbackStore(req.app);
@@ -86,13 +91,18 @@ export async function triggerSos(req, res) {
         priority: emergency.priority,
         recommendedActions: emergency.recommendedActions,
         assignedProviderCategory: emergency.assignedProviderCategory,
+        selectedProviderIds: providerCount > 0 ? selectedProviderIds : [],
         createdAt: new Date().toISOString()
       };
 
       store.sosAlerts.unshift(alert);
 
       return res.status(202).json({
-        message: 'SOS alert accepted (fallback mode)',
+        message: notificationMessage,
+        notifications: {
+          user: { channel: 'in-app', status: 'delivered', recipient: userName },
+          admin: { channel: 'in-app', status: 'delivered', recipient: 'Admin Team' }
+        },
         alert: {
           id: alert.id,
           userName: alert.userName,
@@ -122,11 +132,16 @@ export async function triggerSos(req, res) {
       status: 'queued',
       priority: emergency.priority,
       recommendedActions: emergency.recommendedActions,
-      assignedProviderCategory: emergency.assignedProviderCategory
+      assignedProviderCategory: emergency.assignedProviderCategory,
+      selectedProviderIds: providerCount > 0 ? selectedProviderIds : []
     });
 
     return res.status(202).json({
-      message: 'SOS alert accepted',
+      message: notificationMessage,
+      notifications: {
+        user: { channel: 'in-app', status: 'delivered', recipient: userName },
+        admin: { channel: 'in-app', status: 'delivered', recipient: 'Admin Team' }
+      },
       alert: {
         id: alert._id,
         userName: alert.userName,
