@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { LocalServicesService } from '../../services/local-services.service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { ServiceItem } from '../../models/service-item.model';
 import { ServiceRecommendation } from '../../models/service-recommendation.model';
 import { ProviderProfile } from '../../../auth/models/provider-profile.model';
@@ -41,7 +43,7 @@ export class DashboardHomeComponent implements OnInit {
     'Vehicle accident with possible injury'
   ];
 
-  activeUserTab: 'discover' | 'providers' | 'feedback' | 'sos' | 'admin' = 'discover';
+  activeUserTab: 'discover' | 'sos' | 'admin' = 'discover';
   activeProviderTab: 'overview' | 'visibility' = 'overview';
   backendStatus = 'Checking...';
   backendMode = '';
@@ -68,12 +70,6 @@ export class DashboardHomeComponent implements OnInit {
   providers: ProviderProfile[] = [];
   providersSource = '';
   providerProfile: ProviderProfile | null = null;
-  reviewStatusMessage = '';
-  reviewErrorMessage = '';
-  reviewForm = {
-    rating: 5,
-    comment: ''
-  };
   emergencyQuery = '';
   emergencyType = 'ambulance';
   emergencyAnalysis: EmergencyAnalysis | null = null;
@@ -81,18 +77,30 @@ export class DashboardHomeComponent implements OnInit {
   emergencyErrorMessage = '';
   sosStatusMessage = '';
   sosErrorMessage = '';
+  sosActionLoading = '';
   adminOverview: AdminOverview | null = null;
   adminLoading = false;
-  adminStatusMessage = '';
-  adminErrorMessage = '';
 
   constructor(
     private localServices: LocalServicesService,
-    private sessionService: SessionService
+    private sessionService: SessionService,
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
     const session = this.sessionService.session;
+
+    this.route.queryParams.subscribe((params) => {
+      if (params['tab'] === 'admin') {
+        this.activeUserTab = 'admin';
+        if (!this.adminOverview && !this.adminLoading) {
+          this.loadAdminOverview();
+        }
+      } else {
+        this.activeUserTab = 'discover';
+      }
+    });
     this.currentUserId = session?.user.id ?? `guest-${Date.now()}`;
     this.currentUserName = session?.user.fullName ?? 'Guest User';
     this.currentUserPhone = session?.user.mobile ?? '';
@@ -215,35 +223,6 @@ export class DashboardHomeComponent implements OnInit {
     this.selectedProviderId = providerId;
   }
 
-  submitReview(): void {
-    const provider = this.selectedProvider;
-    this.reviewStatusMessage = '';
-    this.reviewErrorMessage = '';
-
-    if (!provider) {
-      this.reviewErrorMessage = 'Select a provider before submitting a review.';
-      return;
-    }
-
-    this.localServices
-      .createProviderReview(provider.id, {
-        userId: this.currentUserId,
-        userName: this.currentUserName,
-        rating: this.reviewForm.rating,
-        comment: this.reviewForm.comment.trim()
-      })
-      .subscribe({
-        next: (response) => {
-          this.reviewStatusMessage = response.message;
-          this.providers = this.providers.map((entry) => (entry.id === provider.id ? response.data.provider : entry));
-          this.reviewForm = { rating: 5, comment: '' };
-        },
-        error: (error: Error) => {
-          this.reviewErrorMessage = error.message || 'Unable to submit review';
-        }
-      });
-  }
-
   get hasSelectedProviders(): boolean {
     return this.providers.length > 0;
   }
@@ -282,11 +261,6 @@ export class DashboardHomeComponent implements OnInit {
       return;
     }
 
-    if (!this.hasSelectedProviders) {
-      this.sosErrorMessage = 'Select at least one provider in the Providers tab before sending an SOS alert.';
-      return;
-    }
-
     const coords = CITY_COORDINATES[this.city] ?? CITY_COORDINATES['Ernakulam'];
     const selectedIds = this.providers.map((p) => p.id);
     const payload: SosAlertRequest = {
@@ -304,14 +278,12 @@ export class DashboardHomeComponent implements OnInit {
     this.sosLoading = true;
     this.localServices.triggerSos(payload).subscribe({
       next: (response) => {
-        this.sosStatusMessage = response.message;
-        if (response.notifications) {
-          this.sosStatusMessage += ` (You: ${response.notifications.user.status}, Admin: ${response.notifications.admin.status})`;
-        }
+        this.toast.show(response.message, 'success');
         this.sosLoading = false;
+        this.loadAdminOverview();
       },
       error: (error: Error) => {
-        this.sosErrorMessage = error.message || 'Unable to trigger SOS';
+        this.toast.show(error.message || 'Unable to trigger SOS', 'error');
         this.sosLoading = false;
       }
     });
@@ -323,7 +295,6 @@ export class DashboardHomeComponent implements OnInit {
     }
 
     this.adminLoading = true;
-    this.adminErrorMessage = '';
 
     this.localServices.getAdminOverview().subscribe({
       next: (response) => {
@@ -331,23 +302,20 @@ export class DashboardHomeComponent implements OnInit {
         this.adminLoading = false;
       },
       error: (error: Error) => {
-        this.adminErrorMessage = error.message || 'Unable to load super admin data';
+        this.toast.show(error.message || 'Unable to load super admin data', 'error');
         this.adminLoading = false;
       }
     });
   }
 
   updateUserApprovalStatus(user: AdminUser, approvalStatus: ApprovalStatus): void {
-    this.adminStatusMessage = '';
-    this.adminErrorMessage = '';
-
     this.localServices.updateUserApprovalStatus(user.id, approvalStatus).subscribe({
       next: (response) => {
-        this.adminStatusMessage = response.message;
+        this.toast.show(`${user.fullName}: ${response.message}`, 'success');
         this.syncAdminUser(response.data);
       },
       error: (error: Error) => {
-        this.adminErrorMessage = error.message || 'Unable to update user status';
+        this.toast.show(`${user.fullName}: ${error.message || 'Unable to update user status'}`, 'error');
       }
     });
   }
@@ -357,52 +325,47 @@ export class DashboardHomeComponent implements OnInit {
       return;
     }
 
-    this.adminStatusMessage = '';
-    this.adminErrorMessage = '';
-
     this.localServices.updateUserRole(user.id, role as 'user' | 'provider' | 'admin' | 'super_admin').subscribe({
       next: (response) => {
-        this.adminStatusMessage = response.message;
+        this.toast.show(`${user.fullName}: ${response.message}`, 'success');
         this.syncAdminUser(response.data);
       },
       error: (error: Error) => {
-        this.adminErrorMessage = error.message || 'Unable to update user role';
+        this.toast.show(`${user.fullName}: ${error.message || 'Unable to update user role'}`, 'error');
       }
     });
   }
 
   setProviderVerification(provider: ProviderProfile, verified: boolean): void {
-    this.adminStatusMessage = '';
-    this.adminErrorMessage = '';
-
     this.localServices.updateProviderVerification(provider.id, verified).subscribe({
       next: (response) => {
-        this.adminStatusMessage = response.message;
+        this.toast.show(`${provider.businessName}: ${response.message}`, 'success');
         if (this.adminOverview) {
           this.adminOverview.providers = this.adminOverview.providers.map((entry) => (entry.id === provider.id ? response.data : entry));
           this.refreshAdminMetrics();
         }
       },
       error: (error: Error) => {
-        this.adminErrorMessage = error.message || 'Unable to update provider status';
+        this.toast.show(error.message || 'Unable to update provider status', 'error');
       }
     });
   }
 
   setAlertStatus(alert: SosAlert, status: SosAlert['status']): void {
-    this.adminStatusMessage = '';
-    this.adminErrorMessage = '';
+    this.sosActionLoading = alert.id;
 
     this.localServices.updateSosStatus(alert.id, status).subscribe({
       next: (response) => {
-        this.adminStatusMessage = response.message;
+        this.sosActionLoading = '';
+        this.toast.show(`${alert.userName}: ${response.message}`, 'success');
         if (this.adminOverview) {
           this.adminOverview.alerts = this.adminOverview.alerts.map((entry) => (entry.id === alert.id ? response.data : entry));
           this.refreshAdminMetrics();
         }
       },
       error: (error: Error) => {
-        this.adminErrorMessage = error.message || 'Unable to update SOS status';
+        this.sosActionLoading = '';
+        this.toast.show(`${alert.userName}: ${error.message || 'Unable to update SOS status'}`, 'error');
       }
     });
   }
@@ -527,7 +490,7 @@ export class DashboardHomeComponent implements OnInit {
     }
   }
 
-  setUserTab(tab: 'discover' | 'providers' | 'feedback' | 'sos' | 'admin'): void {
+  setUserTab(tab: 'discover' | 'sos' | 'admin'): void {
     this.activeUserTab = tab;
 
     if (tab === 'admin' && this.isSuperAdminView && !this.adminOverview && !this.adminLoading) {

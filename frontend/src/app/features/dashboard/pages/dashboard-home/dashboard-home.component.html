@@ -1,4 +1,4 @@
-<app-page-shell title="Dashboard" subtitle="Local discovery, SOS response, and role-aware operations in a simpler workspace.">
+<app-page-shell title="Dashboard" subtitle="Local discovery, SOS response, and role-aware operations in a simpler workspace." [pendingCount]="pendingUsersCount + pendingProvidersCount">
   <section class="hero-card">
     <div class="hero-copy">
       <p class="eyebrow">Workspace overview</p>
@@ -18,7 +18,22 @@
       <button type="button" class="update-action" (click)="refreshDashboard()">Refresh workspace</button>
     </div>
 
-    <div class="hero-stats" *ngIf="isUserView">
+    <div class="hero-stats" *ngIf="isSuperAdminView && activeUserTab !== 'admin' && adminOverview as data">
+      <article class="metric-card">
+        <span>Users</span>
+        <strong>{{ data.metrics.userCount }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Providers</span>
+        <strong>{{ data.metrics.providerCount }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Open SOS</span>
+        <strong>{{ data.metrics.openSosCount }}</strong>
+      </article>
+    </div>
+
+    <div class="hero-stats" *ngIf="isUserView && !isSuperAdminView">
       <article class="metric-card">
         <span>Providers</span>
         <strong>{{ providers.length }}</strong>
@@ -30,10 +45,6 @@
       <article class="metric-card">
         <span>Fastest response</span>
         <strong>{{ fastestResponseMinutes ?? 0 }} mins</strong>
-      </article>
-      <article class="metric-card" *ngIf="isSuperAdminView">
-        <span>Open SOS</span>
-        <strong>{{ openSosCount }}</strong>
       </article>
     </div>
 
@@ -55,17 +66,11 @@
 
   <ng-container *ngIf="isUserView; else providerDashboard">
     <section class="tab-strip" role="tablist" aria-label="Dashboard sections">
-      <button type="button" class="tab-button" [class.active]="activeUserTab === 'discover'" (click)="setUserTab('discover')">Search</button>
-      <button type="button" class="tab-button" [class.active]="activeUserTab === 'providers'" (click)="setUserTab('providers')">Providers</button>
-      <button type="button" class="tab-button" [class.active]="activeUserTab === 'feedback'" (click)="setUserTab('feedback')">Feedback</button>
-      <button type="button" class="tab-button" [class.active]="activeUserTab === 'sos'" (click)="setUserTab('sos')">SOS</button>
-      <button type="button" class="tab-button" *ngIf="isSuperAdminView" [class.active]="activeUserTab === 'admin'" (click)="setUserTab('admin')">
-        Super Admin
-        <span class="tab-count" *ngIf="pendingUsersCount || pendingProvidersCount">{{ pendingUsersCount + pendingProvidersCount }}</span>
-      </button>
+      <button type="button" class="tab-button" *ngIf="!isSuperAdminView" [class.active]="activeUserTab === 'discover'" (click)="setUserTab('discover')">Search</button>
+      <button type="button" class="tab-button" *ngIf="!isSuperAdminView" [class.active]="activeUserTab === 'sos'" (click)="setUserTab('sos')">SOS</button>
     </section>
 
-    <section class="panel section-panel" *ngIf="activeUserTab === 'discover'">
+    <section class="panel section-panel" *ngIf="activeUserTab === 'discover' && !isSuperAdminView">
       <div class="section-head">
         <div>
           <p class="eyebrow">Discovery</p>
@@ -139,125 +144,7 @@
       </div>
     </section>
 
-    <section class="panel section-panel" *ngIf="activeUserTab === 'providers'">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Provider compare</p>
-          <h3>Inspect details before you call</h3>
-        </div>
-        <span class="count-pill">{{ providers.length }} results</span>
-      </div>
-
-      <div class="providers-layout">
-        <article class="panel inset-panel">
-          <div class="provider-stack" *ngIf="providers.length; else noProviders">
-            <button
-              type="button"
-              class="provider-card"
-              *ngFor="let provider of providers"
-              [class.active]="provider.id === selectedProviderId"
-              (click)="selectProvider(provider.id)"
-            >
-              <div class="provider-copy">
-                <strong>{{ provider.businessName }}</strong>
-                <span>{{ provider.ownerName }} · {{ provider.city }}</span>
-              </div>
-
-              <div class="provider-meta">
-                <span class="status-badge" [class.pending]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
-                <app-star-rating [rating]="provider.rating" [showValue]="true" [reviewCount]="provider.reviewCount"></app-star-rating>
-              </div>
-            </button>
-          </div>
-        </article>
-
-        <article class="panel inset-panel detail-panel" *ngIf="selectedProvider as provider">
-          <div class="section-head compact-head">
-            <div>
-              <p class="eyebrow">Selected provider</p>
-              <h4>{{ provider.businessName }}</h4>
-            </div>
-            <span class="status-badge" [class.pending]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
-          </div>
-
-          <div class="detail-stats">
-            <article class="metric-card">
-              <span>Score</span>
-              <strong>{{ selectedProviderScore }}</strong>
-            </article>
-            <article class="metric-card">
-              <span>Status</span>
-              <strong>{{ provider.availability | capitalize }}</strong>
-            </article>
-            <article class="metric-card">
-              <span>Response</span>
-              <strong>{{ provider.responseTimeMinutes }} mins</strong>
-            </article>
-          </div>
-
-          <div class="detail-list">
-            <p><strong>Owner:</strong> {{ provider.ownerName }}</p>
-            <p><strong>Phone:</strong> {{ provider.mobile }}</p>
-            <p><strong>Email:</strong> {{ provider.email || 'Not shared' }}</p>
-            <p><strong>Address:</strong> {{ provider.address || provider.city }}</p>
-          </div>
-
-          <div class="chip-grid">
-            <span class="chip" *ngFor="let offering of providerOfferings">{{ offering }}</span>
-          </div>
-        </article>
-      </div>
-
-      <ng-template #noProviders>
-        <p class="muted">No providers are available for the selected service and city.</p>
-      </ng-template>
-    </section>
-
-    <section class="panel section-panel" *ngIf="activeUserTab === 'feedback'">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Feedback</p>
-          <h3>Rate the selected provider</h3>
-        </div>
-        <app-star-rating *ngIf="selectedProvider as provider" [rating]="provider.rating" [showValue]="true"></app-star-rating>
-      </div>
-
-      <article class="panel inset-panel feedback-panel" *ngIf="selectedProvider as provider; else feedbackEmpty">
-        <div class="section-head compact-head">
-          <div>
-            <p class="eyebrow">Selected provider</p>
-            <h4>{{ provider.businessName }}</h4>
-          </div>
-          <span class="status-badge" [class.pending]="!provider.verified">{{ provider.verified ? 'Verified' : 'Pending' }}</span>
-        </div>
-
-        <p class="muted">Share a quick rating for {{ provider.businessName }} without leaving the dashboard.</p>
-        <p class="status-copy" *ngIf="reviewStatusMessage">{{ reviewStatusMessage }}</p>
-        <p class="error-copy" *ngIf="reviewErrorMessage">{{ reviewErrorMessage }}</p>
-
-        <label class="field">
-          <span>Your rating</span>
-          <app-star-rating [(rating)]="reviewForm.rating" [interactive]="true" [showValue]="true"></app-star-rating>
-        </label>
-
-        <label class="field">
-          <span>Review</span>
-          <textarea [(ngModel)]="reviewForm.comment" rows="4" placeholder="Share punctuality, quality, and communication details."></textarea>
-        </label>
-
-        <button type="button" class="submit-action" (click)="submitReview()">Submit rating</button>
-      </article>
-
-      <ng-template #feedbackEmpty>
-        <article class="panel inset-panel guidance-card">
-          <p class="eyebrow">No provider selected</p>
-          <h4>Pick a provider in the Providers tab first</h4>
-          <p class="muted">Once you select a provider, you can leave feedback here in a simpler focused form.</p>
-        </article>
-      </ng-template>
-    </section>
-
-    <section class="panel section-panel" *ngIf="activeUserTab === 'sos'">
+    <section class="panel section-panel" *ngIf="activeUserTab === 'sos' && !isSuperAdminView">
       <div class="section-head">
         <div>
           <p class="eyebrow">Emergency</p>
@@ -266,13 +153,8 @@
         <span class="count-pill">{{ city }}</span>
       </div>
 
-      <div class="provider-status-warning" *ngIf="!hasSelectedProviders">
-        <strong>Providers required</strong>
-        <p>Browse and select providers in the Providers tab before sending an SOS alert. SOS notifications will be sent to both you and the admin team.</p>
-      </div>
-
       <div class="provider-status-ready" *ngIf="hasSelectedProviders">
-        <strong>{{ providers.length }} provider(s) loaded</strong>
+        <strong>{{ providers.length }} provider(s) will be notified</strong>
         <p>SOS alert will notify you, the admin team, and your selected providers simultaneously.</p>
       </div>
 
@@ -307,11 +189,10 @@
             <button
               type="button"
               class="danger-button"
-              [class.disabled-looking]="!hasSelectedProviders"
-              [disabled]="!hasSelectedProviders"
+              [disabled]="sosLoading"
               (click)="sendSosAlert()"
             >
-              {{ !hasSelectedProviders ? 'Select providers first' : 'Send SOS alert' }}
+              {{ sosLoading ? 'Sending...' : 'Send SOS alert' }}
             </button>
           </div>
         </article>
@@ -354,8 +235,6 @@
         <button type="button" class="update-action" (click)="loadAdminOverview()">Refresh admin data</button>
       </div>
 
-      <p class="status-copy" *ngIf="adminStatusMessage">{{ adminStatusMessage }}</p>
-      <p class="error-copy" *ngIf="adminErrorMessage">{{ adminErrorMessage }}</p>
       <p class="muted" *ngIf="adminLoading">Loading super admin workspace...</p>
 
       <ng-container *ngIf="adminOverview as data">
@@ -458,8 +337,8 @@
                 </div>
                 <p class="muted">{{ alert.description || 'No incident note provided.' }}</p>
                 <div class="action-row">
-                  <button type="button" class="update-action" (click)="setAlertStatus(alert, 'dispatching')">Dispatching</button>
-                  <button type="button" class="submit-action" (click)="setAlertStatus(alert, 'resolved')">Resolve</button>
+                  <button type="button" class="update-action" [disabled]="sosActionLoading === alert.id" (click)="setAlertStatus(alert, 'dispatching')">{{ sosActionLoading === alert.id ? 'Updating...' : 'Dispatching' }}</button>
+                  <button type="button" class="submit-action" [disabled]="sosActionLoading === alert.id" (click)="setAlertStatus(alert, 'resolved')">{{ sosActionLoading === alert.id ? 'Updating...' : 'Resolve' }}</button>
                 </div>
               </article>
             </div>

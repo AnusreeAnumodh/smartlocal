@@ -19,7 +19,7 @@
           <option value="completed">Completed</option>
         </select>
       </label>
-      <button type="button" class="update-action" (click)="loadBookings()">Refresh</button>
+      <button type="button" class="update-action" (click)="loadData()">Refresh</button>
     </div>
 
     <p class="muted" *ngIf="source">Source: {{ source }}</p>
@@ -122,6 +122,51 @@
         <p class="muted">When customers send booking requests, they will appear here.</p>
       </article>
     </ng-template>
+  </section>
+
+  <section class="panel section-panel" *ngIf="sosAlerts.length || sosLoading">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Emergency</p>
+        <h3>SOS requests from users</h3>
+      </div>
+      <span class="count-pill" *ngIf="sosAlerts.length">{{ sosAlerts.length }} alerts</span>
+      <button type="button" class="update-action" (click)="refreshSosAlerts()" [disabled]="sosLoading">{{ sosLoading ? 'Loading...' : 'Refresh' }}</button>
+    </div>
+
+    <div class="loader-line" *ngIf="sosLoading">
+      <span></span>
+    </div>
+
+    <div class="booking-stack" *ngIf="sosAlerts.length">
+      <article class="booking-card sos-card" *ngFor="let alert of sosAlerts">
+        <div class="booking-header">
+          <div>
+            <strong>{{ alert.userName }}</strong>
+            <p class="muted">{{ alert.emergencyType | capitalize }} &middot; {{ alert.priority | uppercase }} priority</p>
+          </div>
+          <span class="status-badge" [class.status-pending]="alert.status === 'queued'" [class.status-accepted]="alert.status === 'dispatching'" [class.status-completed]="alert.status === 'resolved'">{{ alert.status | uppercase }}</span>
+        </div>
+
+        <div class="booking-details">
+          <p *ngIf="alert.description"><strong>Description:</strong> {{ alert.description }}</p>
+          <p *ngIf="alert.phone"><strong>Phone:</strong> {{ alert.phone }}</p>
+          <p *ngIf="alert.city"><strong>City:</strong> {{ alert.city }}</p>
+          <p *ngIf="alert.recommendedActions?.length"><strong>Recommended actions:</strong></p>
+          <ul class="action-list" *ngIf="alert.recommendedActions?.length">
+            <li *ngFor="let action of alert.recommendedActions">{{ action }}</li>
+          </ul>
+          <p class="muted">Requested on {{ alert.createdAt | date:'medium' }}</p>
+        </div>
+
+        <div class="call-panel" *ngIf="alert.phone">
+          <span>Contact {{ alert.userName }}:</span>
+          <a [href]="'tel:' + alert.phone" class="call-button">
+            Call {{ alert.phone }}
+          </a>
+        </div>
+      </article>
+    </div>
   </section>
 </app-page-shell>
 

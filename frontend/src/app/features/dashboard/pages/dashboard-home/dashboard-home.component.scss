@@ -114,6 +114,13 @@
   font-size: 0.89rem;
   box-shadow: 0 4px 12px rgba(76, 64, 43, 0.06);
   transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+  cursor: pointer;
+}
+
+.tab-button:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(45, 127, 249, 0.24);
+  color: var(--brand-deep);
 }
 
 .tab-button.active {
@@ -272,8 +279,7 @@ p {
 }
 
 .recommendation-card,
-.guidance-card,
-.feedback-panel {
+.guidance-card {
   display: grid;
   gap: 0.9rem;
 }
@@ -360,8 +366,7 @@ p {
   gap: 0.35rem;
 }
 
-.detail-panel,
-.feedback-panel {
+.detail-panel {
   display: grid;
   gap: var(--space-stack);
 }
@@ -390,7 +395,6 @@ p {
   text-align: center;
 }
 
-.feedback-block,
 .admin-card {
   display: grid;
   gap: 0.85rem;
@@ -408,6 +412,14 @@ p {
   justify-content: flex-start;
   text-align: left;
   padding: 0.8rem 0.95rem;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.preset-chip:hover {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(45, 127, 249, 0.24);
+  transform: translateY(-1px);
 }
 
 .analysis-list {
@@ -530,10 +542,6 @@ p {
   p {
     color: #166534;
   }
-}
-
-.disabled-looking {
-  opacity: 0.72;
 }
 
 @media (max-width: 1024px) {

@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { SessionService } from '../../../../core/services/session.service';
 import { BookingService } from '../../services/booking.service';
+import { LocalServicesService } from '../../../dashboard/services/local-services.service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { Booking, BookingStatus } from '../../models/booking.model';
+import { SosAlert } from '../../../dashboard/models/sos-alert.model';
 
 @Component({
   selector: 'app-provider-bookings',
@@ -10,24 +13,30 @@ import { Booking, BookingStatus } from '../../models/booking.model';
 })
 export class ProviderBookingsComponent implements OnInit {
   bookings: Booking[] = [];
+  sosAlerts: SosAlert[] = [];
   loading = false;
+  sosLoading = false;
   source = '';
   filterStatus: BookingStatus | '' = 'pending';
   actionLoading = '';
   rejectionReasons: Record<string, string> = {};
   showRejectForm: Record<string, boolean> = {};
   completionMessage: Record<string, string> = {};
+  sosStatusMessage = '';
+  sosErrorMessage = '';
 
   constructor(
     public sessionService: SessionService,
-    private bookingService: BookingService
+    private bookingService: BookingService,
+    private localServices: LocalServicesService,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
-    this.loadBookings();
+    this.loadData();
   }
 
-  loadBookings(): void {
+  loadData(): void {
     const session = this.sessionService.session;
     if (!session || !session.providerProfile) return;
 
@@ -43,6 +52,35 @@ export class ProviderBookingsComponent implements OnInit {
         this.loading = false;
       }
     });
+
+    this.sosLoading = true;
+    this.localServices.getProviderSosAlerts(session.providerProfile.id).subscribe({
+      next: (res) => {
+        this.sosAlerts = res.data;
+        this.sosLoading = false;
+      },
+      error: () => {
+        this.sosAlerts = [];
+        this.sosLoading = false;
+      }
+    });
+  }
+
+  refreshSosAlerts(): void {
+    const session = this.sessionService.session;
+    if (!session || !session.providerProfile) return;
+
+    this.sosLoading = true;
+    this.localServices.getProviderSosAlerts(session.providerProfile.id).subscribe({
+      next: (res) => {
+        this.sosAlerts = res.data;
+        this.sosLoading = false;
+      },
+      error: () => {
+        this.sosAlerts = [];
+        this.sosLoading = false;
+      }
+    });
   }
 
   get filteredBookings(): Booking[] {
@@ -56,9 +94,11 @@ export class ProviderBookingsComponent implements OnInit {
       next: (res) => {
         this.updateBookingInList(res.data);
         this.actionLoading = '';
+        this.toast.show(res.message || 'Booking accepted', 'success');
       },
       error: () => {
         this.actionLoading = '';
+        this.toast.show('Unable to accept booking', 'error');
       }
     });
   }
@@ -81,9 +121,11 @@ export class ProviderBookingsComponent implements OnInit {
         this.actionLoading = '';
         this.showRejectForm[bookingId] = false;
         this.rejectionReasons[bookingId] = '';
+        this.toast.show(res.message || 'Booking rejected', 'success');
       },
       error: () => {
         this.actionLoading = '';
+        this.toast.show('Unable to reject booking', 'error');
       }
     });
   }
@@ -94,10 +136,11 @@ export class ProviderBookingsComponent implements OnInit {
       next: (res) => {
         this.updateBookingInList(res.data);
         this.actionLoading = '';
-        this.completionMessage[bookingId] = 'Task marked as completed. The customer has been notified and can now leave feedback.';
+        this.toast.show('Booking completed. Customer has been notified.', 'success');
       },
       error: () => {
         this.actionLoading = '';
+        this.toast.show('Unable to complete booking', 'error');
       }
     });
   }

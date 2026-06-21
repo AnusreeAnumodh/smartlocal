@@ -8,11 +8,26 @@
     <div class="page-shell-actions">
       <nav class="page-shell-nav">
         <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-        <a routerLink="/booking/providers" routerLinkActive="active">Providers</a>
-        <a routerLink="/booking/my-bookings" routerLinkActive="active">My Bookings</a>
-        <a routerLink="/booking/manage" routerLinkActive="active" *ngIf="isProviderOrAdmin">Manage Requests</a>
+        <a routerLink="/booking/providers" routerLinkActive="active" *ngIf="!isProviderOrAdmin">Providers</a>
+        <a routerLink="/booking/my-bookings" routerLinkActive="active" *ngIf="!isProviderOrAdmin">My Bookings</a>
+        <a routerLink="/booking/manage" routerLinkActive="active" *ngIf="isProviderOrAdmin && !isSuperAdmin">Manage Requests</a>
+        <a routerLink="/dashboard" [queryParams]="{tab: 'admin'}" routerLinkActive="active" *ngIf="isSuperAdmin">
+          Super Admin
+          <span class="nav-count" *ngIf="pendingCount">{{ pendingCount }}</span>
+        </a>
       </nav>
     </div>
   </header>
   <ng-content></ng-content>
 </section>
+<div class="toast-container">
+  <div
+    *ngFor="let toast of toasts"
+    class="toast-message"
+    [class.toast-success]="toast.type === 'success'"
+    [class.toast-error]="toast.type === 'error'"
+    [class.toast-info]="toast.type === 'info'"
+  >
+    {{ toast.text }}
+  </div>
+</div>

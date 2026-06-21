@@ -69,6 +69,11 @@ h2 {
   padding: 0.48rem 0.78rem;
 }
 
+.mode-switch button:hover:not(.active) {
+  color: var(--brand-deep);
+  background: rgba(255, 255, 255, 0.5);
+}
+
 .mode-switch button.active {
   background: linear-gradient(135deg, var(--brand-deep), var(--brand-vivid));
   color: #ffffff;

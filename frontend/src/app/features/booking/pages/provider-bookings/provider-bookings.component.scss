@@ -152,6 +152,20 @@
   color: #854d0e;
 }
 
+.action-list {
+  margin: 0.25rem 0 0 1.25rem;
+  padding: 0;
+
+  li {
+    margin-bottom: 0.25rem;
+    color: #4b5563;
+  }
+}
+
+.sos-card {
+  border-left: 4px solid #ef4444;
+}
+
 @media (max-width: 720px) {
   .booking-header,
   .call-panel,

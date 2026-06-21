@@ -148,6 +148,10 @@ export class LocalServicesService {
     return this.api.patch(`/admin/users/${userId}/role`, { role });
   }
 
+  getProviderSosAlerts(providerId: string): Observable<{ data: SosAlert[]; count: number; source: string }> {
+    return this.api.get(`/emergency/sos/provider/${encodeURIComponent(providerId)}`);
+  }
+
   updateSosStatus(alertId: string, status: SosAlert['status']): Observable<{ message: string; data: SosAlert }> {
     return this.api.patch(`/admin/sos-alerts/${alertId}/status`, { status });
   }

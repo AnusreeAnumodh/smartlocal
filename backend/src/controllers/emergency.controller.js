@@ -165,6 +165,33 @@ export async function triggerSos(req, res) {
   }
 }
 
+export async function getProviderSosAlerts(req, res) {
+  try {
+    const { providerId } = req.params;
+    if (!providerId) {
+      return res.status(400).json({ message: 'providerId is required' });
+    }
+
+    const isDbConnected = Boolean(req.app.locals.dbConnected);
+
+    if (!isDbConnected) {
+      const store = ensureFallbackStore(req.app);
+      const alerts = store.sosAlerts.filter(
+        (a) => Array.isArray(a.selectedProviderIds) && a.selectedProviderIds.includes(providerId)
+      );
+      return res.json({ data: alerts, count: alerts.length, source: 'local' });
+    }
+
+    const alerts = await SosAlert.find({ selectedProviderIds: providerId }).sort({ createdAt: -1 });
+    return res.json({ data: alerts, count: alerts.length, source: 'database' });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Failed to fetch SOS alerts',
+      error: error.message
+    });
+  }
+}
+
 export function analyzeEmergency(req, res) {
   const { query, emergencyType = '' } = req.body || {};
 
