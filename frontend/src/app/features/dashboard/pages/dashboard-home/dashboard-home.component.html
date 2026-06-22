@@ -283,7 +283,7 @@
                       <option *ngFor="let role of manageableRoles" [value]="role.value">{{ role.label }}</option>
                     </select>
                   </label>
-                  <div class="action-row">
+                  <div class="action-row admin-action-row">
                     <button type="button" class="submit-action" (click)="updateUserApprovalStatus(user, 'approved')">Approve</button>
                     <button type="button" class="secondary-action" (click)="updateUserApprovalStatus(user, 'pending')">Set pending</button>
                     <button type="button" class="danger-button" (click)="updateUserApprovalStatus(user, 'suspended')">Suspend</button>
@@ -310,7 +310,7 @@
                   </div>
                   <app-star-rating [rating]="provider.rating" [showValue]="true" [reviewCount]="provider.reviewCount"></app-star-rating>
                 </div>
-                <div class="action-row">
+                <div class="action-row admin-action-row">
                   <button type="button" class="submit-action" *ngIf="!provider.verified" (click)="setProviderVerification(provider, true)">Approve provider</button>
                   <button type="button" class="danger-button" *ngIf="provider.verified" (click)="setProviderVerification(provider, false)">Move to pending</button>
                 </div>
@@ -336,7 +336,7 @@
                   <span class="status-badge" [class.pending]="alert.status !== 'resolved'">{{ alert.status | uppercase }}</span>
                 </div>
                 <p class="muted">{{ alert.description || 'No incident note provided.' }}</p>
-                <div class="action-row">
+                <div class="action-row sos-action-row">
                   <button type="button" class="update-action" [disabled]="sosActionLoading === alert.id" (click)="setAlertStatus(alert, 'dispatching')">{{ sosActionLoading === alert.id ? 'Updating...' : 'Dispatching' }}</button>
                   <button type="button" class="submit-action" [disabled]="sosActionLoading === alert.id" (click)="setAlertStatus(alert, 'resolved')">{{ sosActionLoading === alert.id ? 'Updating...' : 'Resolve' }}</button>
                 </div>
@@ -352,10 +352,11 @@
     <section class="tab-strip" role="tablist" aria-label="Provider sections">
       <button type="button" class="tab-button" [class.active]="activeProviderTab === 'overview'" (click)="setProviderTab('overview')">Overview</button>
       <button type="button" class="tab-button" [class.active]="activeProviderTab === 'visibility'" (click)="setProviderTab('visibility')">Visibility</button>
+      <button type="button" class="tab-button" [class.active]="activeProviderTab === 'reviews'" (click)="setProviderTab('reviews')">Reviews</button>
     </section>
 
     <section class="panel section-panel" *ngIf="providerProfile as provider">
-      <div class="providers-layout" *ngIf="activeProviderTab === 'overview'; else visibilityTab">
+      <div class="providers-layout" *ngIf="activeProviderTab === 'overview'; else providerOtherTabs">
         <article class="panel inset-panel detail-panel">
           <div class="section-head compact-head">
             <div>
@@ -395,33 +396,64 @@
         </article>
       </div>
 
-      <ng-template #visibilityTab>
-        <article class="panel inset-panel detail-panel">
-          <div class="section-head compact-head">
-            <div>
-              <p class="eyebrow">Customer-facing view</p>
-              <h4>How local users will see your listing</h4>
+      <ng-template #providerOtherTabs>
+        <ng-container *ngIf="activeProviderTab === 'visibility'; else reviewsTab">
+          <article class="panel inset-panel detail-panel">
+            <div class="section-head compact-head">
+              <div>
+                <p class="eyebrow">Customer-facing view</p>
+                <h4>How local users will see your listing</h4>
+              </div>
+              <app-star-rating [rating]="provider.rating" [showValue]="true" [reviewCount]="provider.reviewCount"></app-star-rating>
             </div>
-            <app-star-rating [rating]="provider.rating" [showValue]="true" [reviewCount]="provider.reviewCount"></app-star-rating>
-          </div>
 
-          <div class="detail-stats">
-            <article class="metric-card">
-              <span>Response time</span>
-              <strong>{{ provider.responseTimeMinutes }} mins</strong>
-            </article>
-            <article class="metric-card">
-              <span>Service city</span>
-              <strong>{{ provider.city }}</strong>
-            </article>
-            <article class="metric-card">
-              <span>Verification</span>
-              <strong>{{ provider.verified ? 'Approved' : 'Pending' }}</strong>
-            </article>
-          </div>
+            <div class="detail-stats">
+              <article class="metric-card">
+                <span>Response time</span>
+                <strong>{{ provider.responseTimeMinutes }} mins</strong>
+              </article>
+              <article class="metric-card">
+                <span>Service city</span>
+                <strong>{{ provider.city }}</strong>
+              </article>
+              <article class="metric-card">
+                <span>Verification</span>
+                <strong>{{ provider.verified ? 'Approved' : 'Pending' }}</strong>
+              </article>
+            </div>
 
-          <p class="muted">Users filtering for {{ provider.category | capitalize }} in {{ provider.city }} will see your business summary, response time, and reviews in this format.</p>
-        </article>
+            <p class="muted">Users filtering for {{ provider.category | capitalize }} in {{ provider.city }} will see your business summary, response time, and reviews in this format.</p>
+          </article>
+        </ng-container>
+
+        <ng-template #reviewsTab>
+          <article class="panel inset-panel detail-panel">
+            <div class="section-head compact-head">
+              <div>
+                <p class="eyebrow">Customer reviews</p>
+                <h4>What users are saying about your business</h4>
+              </div>
+              <app-star-rating [rating]="provider.rating" [showValue]="true" [reviewCount]="provider.reviewCount"></app-star-rating>
+            </div>
+
+            <p class="muted" *ngIf="providerReviewsLoading">Loading reviews...</p>
+
+            <div class="reviews-stack" *ngIf="!providerReviewsLoading && providerReviews.length">
+              <article class="review-card" *ngFor="let review of providerReviews">
+                <div class="review-head">
+                  <strong>{{ review.userName }}</strong>
+                  <app-star-rating [rating]="review.rating" [showValue]="true"></app-star-rating>
+                </div>
+                <p class="review-comment">{{ review.comment || 'No comment provided.' }}</p>
+                <span class="review-date">{{ review.createdAt | date: 'medium' }}</span>
+              </article>
+            </div>
+
+            <div class="reviews-empty" *ngIf="!providerReviewsLoading && !providerReviews.length">
+              <p class="muted">No reviews yet. Reviews from your customers will appear here.</p>
+            </div>
+          </article>
+        </ng-template>
       </ng-template>
     </section>
   </ng-template>

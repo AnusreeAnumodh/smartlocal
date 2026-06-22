@@ -12,6 +12,7 @@ import { EmergencyAnalysis } from '../../models/emergency-analysis.model';
 import { SosAlertRequest } from '../../models/sos-alert-request.model';
 import { AdminOverview } from '../../../admin/models/admin-overview.model';
 import { AdminUser } from '../../../admin/models/admin-user.model';
+import { ProviderReview } from '../../models/provider-review.model';
 import { SosAlert } from '../../models/sos-alert.model';
 import { ApprovalStatus, UserRole } from '../../../../models/user-session.model';
 
@@ -44,7 +45,7 @@ export class DashboardHomeComponent implements OnInit {
   ];
 
   activeUserTab: 'discover' | 'sos' | 'admin' = 'discover';
-  activeProviderTab: 'overview' | 'visibility' = 'overview';
+  activeProviderTab: 'overview' | 'visibility' | 'reviews' = 'overview';
   backendStatus = 'Checking...';
   backendMode = '';
   isUsingDemoData = false;
@@ -68,6 +69,8 @@ export class DashboardHomeComponent implements OnInit {
   currentProviderBusiness = '';
   selectedProviderId = '';
   providers: ProviderProfile[] = [];
+  providerReviews: ProviderReview[] = [];
+  providerReviewsLoading = false;
   providersSource = '';
   providerProfile: ProviderProfile | null = null;
   emergencyQuery = '';
@@ -498,8 +501,27 @@ export class DashboardHomeComponent implements OnInit {
     }
   }
 
-  setProviderTab(tab: 'overview' | 'visibility'): void {
+  setProviderTab(tab: 'overview' | 'visibility' | 'reviews'): void {
     this.activeProviderTab = tab;
+    if (tab === 'reviews' && !this.providerReviews.length && !this.providerReviewsLoading) {
+      this.loadProviderReviews();
+    }
+  }
+
+  loadProviderReviews(): void {
+    const providerId = this.providerProfile?.id;
+    if (!providerId) return;
+    this.providerReviewsLoading = true;
+    this.localServices.getProviderReviews(providerId).subscribe({
+      next: (res) => {
+        this.providerReviews = res.data;
+        this.providerReviewsLoading = false;
+      },
+      error: () => {
+        this.providerReviews = [];
+        this.providerReviewsLoading = false;
+      }
+    });
   }
 
   private getDemoServices(): ServiceItem[] {

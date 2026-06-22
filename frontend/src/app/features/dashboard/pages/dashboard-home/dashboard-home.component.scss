@@ -400,6 +400,49 @@ p {
   gap: 0.85rem;
 }
 
+.reviews-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.review-card {
+  padding: var(--space-card);
+  border-radius: 16px;
+  border: 1px solid rgba(73, 93, 128, 0.12);
+  background: rgba(255, 255, 255, 0.76);
+  display: grid;
+  gap: 0.4rem;
+}
+
+.review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.review-head strong {
+  color: var(--ink-strong);
+}
+
+.review-comment {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.review-date {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.reviews-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
 .preset-list {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   margin-bottom: 0.25rem;
@@ -435,9 +478,10 @@ p {
 }
 
 .action-row > button,
-.hero-actions > button,
-.filter-grid > button {
+.hero-actions > button {
   padding-inline: 1rem;
+  min-width: min(100%, 11rem);
+  flex: 0 1 11rem;
 }
 
 .filter-grid > button {
@@ -447,6 +491,25 @@ p {
 
 .admin-controls .action-row > button {
   flex: 1 1 140px;
+}
+
+.admin-action-row {
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.admin-action-row > button {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.admin-action-row .submit-action,
+.admin-action-row .danger-button {
+  min-height: 2.4rem;
+  padding: 0.55rem 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.1;
+  border-radius: 999px;
 }
 
 .provider-meta,
@@ -500,6 +563,16 @@ p {
 
 .sos-layout .action-row {
   margin-top: 0.4rem;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.sos-action-row > button {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .provider-status-warning,
@@ -568,6 +641,15 @@ p {
   .action-row {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .sos-action-row {
+    grid-template-columns: 1fr;
+  }
+
+  .sos-action-row > button,
+  .admin-action-row > button {
+    width: 100%;
   }
 
   .hero-actions,

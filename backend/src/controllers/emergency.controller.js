@@ -51,10 +51,10 @@ function buildEmergencySummary(input) {
 
   return {
     description,
-    emergencyType: emergencyType || result.suggestedCategory || 'general',
+    emergencyType: emergencyType || result.suggestedCategory || 'plumber',
     priority: result.priority,
     recommendedActions: result.actions,
-    assignedProviderCategory: result.suggestedCategory
+    assignedProviderCategory: emergencyType || result.suggestedCategory || 'plumber'
   };
 }
 
@@ -207,7 +207,7 @@ export function analyzeEmergency(req, res) {
       emergencyType: emergencyType || result.suggestedCategory,
       priority: result.priority,
       recommendedActions: result.actions,
-      suggestedCategory: result.suggestedCategory,
+      suggestedCategory: emergencyType || result.suggestedCategory,
       shouldTriggerSos: result.priority === 'high',
       assistantMessage:
         result.priority === 'high'
